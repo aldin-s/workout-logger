@@ -5,44 +5,55 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.workouttracker.MainActivity
 import com.example.workouttracker.R
-import com.example.workouttracker.ui.timer.TimerActivity
+import com.example.workouttracker.ui.history.WorkoutHistoryActivity
 
 class TrackingActivity : AppCompatActivity() {
 
-    private lateinit var currentSetTextView: TextView
-    private lateinit var repetitionsTextView: TextView
-    private lateinit var nextSetButton: Button
-    private var currentSet: Int = 1
-    private var totalRepetitions: Int = 0
+    private lateinit var completionTitleTextView: TextView
+    private lateinit var exerciseNameTextView: TextView
+    private lateinit var setsCompletedTextView: TextView
+    private lateinit var backToMainButton: Button
+    private lateinit var viewHistoryButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracking)
 
-        currentSetTextView = findViewById(R.id.currentSetTextView)
-        repetitionsTextView = findViewById(R.id.repetitionsTextView)
-        nextSetButton = findViewById(R.id.nextSetButton)
+        completionTitleTextView = findViewById(R.id.completionTitleTextView)
+        exerciseNameTextView = findViewById(R.id.exerciseNameTextView)
+        setsCompletedTextView = findViewById(R.id.setsCompletedTextView)
+        backToMainButton = findViewById(R.id.backToMainButton)
+        viewHistoryButton = findViewById(R.id.viewHistoryButton)
 
-        // Initialize with the first set
-        updateUI()
+        // Get data from intent
+        val setsCompleted = intent.getIntExtra("SETS_COMPLETED", 0)
+        val exerciseName = intent.getStringExtra("EXERCISE_NAME") ?: "Übung"
 
-        nextSetButton.setOnClickListener {
-            // Logic to track the next set
-            currentSet++
-            totalRepetitions += 10 // Assuming 10 repetitions per set for simplicity
-            updateUI()
+        // Update UI with completion data
+        exerciseNameTextView.text = exerciseName
+        setsCompletedTextView.text = "$setsCompleted Sätze abgeschlossen"
+
+        backToMainButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
         }
-    }
 
-    private fun updateUI() {
-        currentSetTextView.text = "Set: $currentSet"
-        repetitionsTextView.text = "Total Repetitions: $totalRepetitions"
+        viewHistoryButton.setOnClickListener {
+            val intent = Intent(this, WorkoutHistoryActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-        startActivity(Intent(this, TimerActivity::class.java))
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
         finish()
     }
 }

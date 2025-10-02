@@ -1,36 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="32dp"
+    android:gravity="center"
+    android:background="#F5F5F5">
 
+    <!-- Success Icon -->
     <TextView
-        android:id="@+id/currentSetTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Current Set: 1"
-        android:textSize="24sp"
+        android:text="✓"
+        android:textSize="72sp"
+        android:textColor="#4CAF50"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/completionTitleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Workout abgeschlossen!"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
         android:layout_marginBottom="16dp"/>
 
+    <!-- Exercise Name -->
     <TextView
-        android:id="@+id/repetitionsTextView"
+        android:id="@+id/exerciseNameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Repetitions: 0"
+        android:text="Übung"
         android:textSize="24sp"
+        android:textColor="#424242"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Sets Completed -->
+    <TextView
+        android:id="@+id/setsCompletedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3 Sätze abgeschlossen"
+        android:textSize="20sp"
+        android:textColor="#616161"
+        android:layout_marginBottom="48dp"/>
+
+    <!-- Buttons -->
+    <Button
+        android:id="@+id/backToMainButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Zurück zum Hauptmenü"
+        android:textSize="16sp"
+        android:padding="16dp"
         android:layout_marginBottom="16dp"/>
 
     <Button
-        android:id="@+id/nextSetButton"
+        android:id="@+id/viewHistoryButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Next Set"/>
-
-    <Button
-        android:id="@+id/endWorkoutButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="End Workout"
-        android:layout_marginTop="16dp"/>
+        android:text="Historie ansehen"
+        android:textSize="16sp"
+        android:padding="16dp"
+        style="?android:attr/borderlessButtonStyle"/>
 
 </LinearLayout>
