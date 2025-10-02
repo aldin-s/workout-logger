@@ -1,50 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center">
+    android:background="#121212">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Workout Tracker"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="32dp" />
-
-    <TextView
-        android:id="@+id/timerTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00"
-        android:textSize="48sp"
-        android:layout_gravity="center"
-        android:padding="16dp" />
-
-    <TextView
-        android:id="@+id/setsTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0/0"
-        android:textSize="24sp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="32dp" />
-
-    <Button
-        android:id="@+id/startWorkoutButton"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Workout"
-        android:textSize="18sp"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <Button
-        android:id="@+id/historyButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Workout History"
-        android:textSize="18sp" />
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="WORKOUT TRACKER"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            android:textColor="#B0B0B0"
+            android:letterSpacing="0.05"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center" />
 
-</LinearLayout>
+        <View
+            android:layout_width="40dp"
+            android:layout_height="1dp"
+            android:background="#404040"
+            android:layout_gravity="center"
+            android:layout_marginBottom="48dp" />
+
+        <!-- Timer Display -->
+        <TextView
+            android:id="@+id/timerTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="72sp"
+            android:textStyle="normal"
+            android:textColor="#FFFFFF"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Sets Display -->
+        <TextView
+            android:id="@+id/setsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Satz 0/0"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:textColor="#B0B0B0"
+            android:layout_gravity="center"
+            android:layout_marginBottom="64dp" />
+
+        <!-- Action Buttons -->
+        <Button
+            android:id="@+id/startWorkoutButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="START WORKOUT"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:textColor="#FFFFFF"
+            android:letterSpacing="0.1"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="2dp"
+            app:cornerRadius="8dp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/historyButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="WORKOUT HISTORY"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:textColor="#FFFFFF"
+            android:letterSpacing="0.1"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
+
+    </LinearLayout>
+
+</ScrollView>
