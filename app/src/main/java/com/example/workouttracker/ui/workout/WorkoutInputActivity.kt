@@ -7,7 +7,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
+import com.google.android.material.card.MaterialCardView
 import com.example.workouttracker.R
 import com.example.workouttracker.ui.timer.TimerActivity
 import com.google.android.material.textfield.TextInputEditText
@@ -16,11 +16,11 @@ import com.google.android.material.textfield.TextInputLayout
 class WorkoutInputActivity : AppCompatActivity() {
     
     // Exercise selection cards
-    private lateinit var cardKreuzheben: CardView
-    private lateinit var cardBankdruecken: CardView
-    private lateinit var cardRudern: CardView
-    private lateinit var cardKniebeuge: CardView
-    private lateinit var cardCustomExercise: CardView
+    private lateinit var cardKreuzheben: MaterialCardView
+    private lateinit var cardBankdruecken: MaterialCardView
+    private lateinit var cardRudern: MaterialCardView
+    private lateinit var cardKniebeuge: MaterialCardView
+    private lateinit var cardCustomExercise: MaterialCardView
     
     // Selected exercise display
     private lateinit var selectedExerciseLabel: TextView
@@ -100,15 +100,17 @@ class WorkoutInputActivity : AppCompatActivity() {
         selectedExercise = exercise
         isCustomExercise = custom
         
-        // Reset all card backgrounds
-        resetCardBackgrounds()
+        // Reset all card borders
+        resetCardBorders()
         
         if (custom) {
             // Show custom input
             customExerciseLayout.visibility = View.VISIBLE
             selectedExerciseLabel.visibility = View.GONE
             selectedExerciseText.visibility = View.GONE
-            cardCustomExercise.setCardBackgroundColor(getColor(R.color.exercise_selected))
+            // Highlight with darker border
+            cardCustomExercise.setStrokeColor(getColor(R.color.gray_900))
+            cardCustomExercise.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
         } else {
             // Show selected exercise
             customExerciseLayout.visibility = View.GONE
@@ -116,23 +118,42 @@ class WorkoutInputActivity : AppCompatActivity() {
             selectedExerciseText.visibility = View.VISIBLE
             selectedExerciseText.text = exercise
             
-            // Highlight selected card
+            // Highlight selected card with darker border
             when (exercise) {
-                "Kreuzheben" -> cardKreuzheben.setCardBackgroundColor(getColor(R.color.exercise_selected))
-                "Bankdrücken" -> cardBankdruecken.setCardBackgroundColor(getColor(R.color.exercise_selected))
-                "Rudern" -> cardRudern.setCardBackgroundColor(getColor(R.color.exercise_selected))
-                "Kniebeuge" -> cardKniebeuge.setCardBackgroundColor(getColor(R.color.exercise_selected))
+                "Kreuzheben" -> {
+                    cardKreuzheben.setStrokeColor(getColor(R.color.gray_900))
+                    cardKreuzheben.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
+                }
+                "Bankdrücken" -> {
+                    cardBankdruecken.setStrokeColor(getColor(R.color.gray_900))
+                    cardBankdruecken.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
+                }
+                "Rudern" -> {
+                    cardRudern.setStrokeColor(getColor(R.color.gray_900))
+                    cardRudern.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
+                }
+                "Kniebeuge" -> {
+                    cardKniebeuge.setStrokeColor(getColor(R.color.gray_900))
+                    cardKniebeuge.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
+                }
             }
         }
     }
     
-    private fun resetCardBackgrounds() {
-        val defaultColor = getColor(android.R.color.white)
-        cardKreuzheben.setCardBackgroundColor(defaultColor)
-        cardBankdruecken.setCardBackgroundColor(defaultColor)
-        cardRudern.setCardBackgroundColor(defaultColor)
-        cardKniebeuge.setCardBackgroundColor(defaultColor)
-        cardCustomExercise.setCardBackgroundColor(getColor(R.color.exercise_custom_bg))
+    private fun resetCardBorders() {
+        val defaultStrokeColor = getColor(R.color.gray_200)
+        val defaultStrokeWidth = resources.getDimensionPixelSize(R.dimen.card_stroke_default)
+        
+        cardKreuzheben.setStrokeColor(defaultStrokeColor)
+        cardKreuzheben.setStrokeWidth(defaultStrokeWidth)
+        cardBankdruecken.setStrokeColor(defaultStrokeColor)
+        cardBankdruecken.setStrokeWidth(defaultStrokeWidth)
+        cardRudern.setStrokeColor(defaultStrokeColor)
+        cardRudern.setStrokeWidth(defaultStrokeWidth)
+        cardKniebeuge.setStrokeColor(defaultStrokeColor)
+        cardKniebeuge.setStrokeWidth(defaultStrokeWidth)
+        cardCustomExercise.setStrokeColor(getColor(R.color.gray_400))
+        cardCustomExercise.setStrokeWidth(defaultStrokeWidth)
     }
 
     private fun setupClickListeners() {

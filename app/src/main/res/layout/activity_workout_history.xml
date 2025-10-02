@@ -3,17 +3,30 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#121212"
+    android:padding="24dp">
 
+    <!-- Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Workout History"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"
+        android:text="WORKOUT HISTORY"
+        android:textSize="16sp"
+        android:textStyle="normal"
+        android:textColor="#B0B0B0"
+        android:letterSpacing="0.05"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center" />
 
+    <View
+        android:layout_width="40dp"
+        android:layout_height="1dp"
+        android:background="#404040"
+        android:layout_gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <!-- History List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/historyRecyclerView"
         android:layout_width="match_parent"
