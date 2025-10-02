@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ÜBUNG WÄHLEN"
+            android:text="@string/select_exercise"
             android:textSize="16sp"
             android:textStyle="normal"
             android:textColor="#B0B0B0"
@@ -67,7 +67,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kreuzheben"
+                        android:text="@string/exercise_deadlift"
                         android:textSize="15sp"
                         android:textStyle="normal"
                         android:textColor="#FFFFFF"
@@ -103,7 +103,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Bankdrücken"
+                        android:text="@string/exercise_bench_press"
                         android:textSize="15sp"
                         android:textStyle="normal"
                         android:textColor="#FFFFFF"
@@ -139,7 +139,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rudern"
+                        android:text="@string/exercise_rowing"
                         android:textSize="15sp"
                         android:textStyle="normal"
                         android:textColor="#FFFFFF"
@@ -175,7 +175,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kniebeuge"
+                        android:text="@string/exercise_squat"
                         android:textSize="15sp"
                         android:textStyle="normal"
                         android:textColor="#FFFFFF"
@@ -211,7 +211,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+ Eigene Übung"
+                        android:text="@string/custom_exercise"
                         android:textSize="14sp"
                         android:textStyle="normal"
                         android:textColor="#B0B0B0"
@@ -265,7 +265,7 @@
                 android:id="@+id/customExerciseEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Übungsname eingeben"
+                android:hint="@string/custom_exercise_hint"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -280,7 +280,7 @@
                 android:id="@+id/weightEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Gewicht (kg)"
+                android:hint="@string/weight_label"
                 android:inputType="numberDecimal" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -294,7 +294,7 @@
                 android:id="@+id/repsEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Wiederholungen"
+                android:hint="@string/reps_label"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -308,7 +308,7 @@
                 android:id="@+id/pauseTimeEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Pausenzeit (Sekunden)"
+                android:hint="@string/pause_time_label"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -322,7 +322,7 @@
                 android:id="@+id/setsEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Anzahl Sätze"
+                android:hint="@string/sets_label"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -331,7 +331,7 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="START"
+            android:text="@string/start_button"
             android:textSize="14sp"
             android:textColor="#FFFFFF"
             android:letterSpacing="0.1"

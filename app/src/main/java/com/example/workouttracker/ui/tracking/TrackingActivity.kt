@@ -36,8 +36,8 @@ class TrackingActivity : AppCompatActivity() {
 
         // Update UI with completion data
         exerciseNameTextView.text = exerciseName.uppercase()
-        weightTextView.text = String.format("%.1f kg", weight)
-        setsCompletedTextView.text = "$setsCompleted Sätze abgeschlossen"
+        weightTextView.text = String.format(getString(R.string.weight_format), weight)
+        setsCompletedTextView.text = resources.getQuantityString(R.plurals.sets_completed, setsCompleted, setsCompleted)
 
         backToMainButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)

@@ -56,7 +56,7 @@ class TimerActivity : AppCompatActivity() {
         
         // Initialize display
         exerciseNameTextView.text = exerciseName.uppercase()
-        weightTextView.text = String.format("%.1f kg", weight)
+        weightTextView.text = String.format(getString(R.string.weight_format), weight)
         updateSetsDisplay()
         timerTextView.text = String.format("%02d:%02d", pauseTimeSeconds / 60, pauseTimeSeconds % 60)
         
@@ -92,19 +92,19 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun updateSetsDisplay() {
-        setsTextView.text = "Satz $currentSet/$totalSets"
+        setsTextView.text = String.format(getString(R.string.set_format), currentSet, totalSets)
     }
     
     private fun setButtonDisabled() {
         doneButton.isEnabled = false
-        doneButton.text = "PAUSE LÄUFT..."
+        doneButton.text = getString(R.string.pause_running)
         doneButton.alpha = 0.5f
         doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_400))
     }
     
     private fun setButtonEnabled() {
         doneButton.isEnabled = true
-        doneButton.text = "SATZ FERTIG"
+        doneButton.text = getString(R.string.set_done)
         doneButton.alpha = 1.0f
         doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_900))
     }

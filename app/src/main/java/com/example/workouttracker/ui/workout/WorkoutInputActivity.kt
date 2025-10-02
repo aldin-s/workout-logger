@@ -76,19 +76,19 @@ class WorkoutInputActivity : AppCompatActivity() {
     
     private fun setupExerciseCards() {
         cardKreuzheben.setOnClickListener {
-            selectExercise("Kreuzheben", false)
+            selectExercise(getString(R.string.exercise_deadlift), false)
         }
         
         cardBankdruecken.setOnClickListener {
-            selectExercise("Bankdrücken", false)
+            selectExercise(getString(R.string.exercise_bench_press), false)
         }
         
         cardRudern.setOnClickListener {
-            selectExercise("Rudern", false)
+            selectExercise(getString(R.string.exercise_rowing), false)
         }
         
         cardKniebeuge.setOnClickListener {
-            selectExercise("Kniebeuge", false)
+            selectExercise(getString(R.string.exercise_squat), false)
         }
         
         cardCustomExercise.setOnClickListener {
@@ -120,19 +120,19 @@ class WorkoutInputActivity : AppCompatActivity() {
             
             // Highlight selected card with white border
             when (exercise) {
-                "Kreuzheben" -> {
+                getString(R.string.exercise_deadlift) -> {
                     cardKreuzheben.setStrokeColor(getColor(R.color.gray_900))
                     cardKreuzheben.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
-                "Bankdrücken" -> {
+                getString(R.string.exercise_bench_press) -> {
                     cardBankdruecken.setStrokeColor(getColor(R.color.gray_900))
                     cardBankdruecken.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
-                "Rudern" -> {
+                getString(R.string.exercise_rowing) -> {
                     cardRudern.setStrokeColor(getColor(R.color.gray_900))
                     cardRudern.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
-                "Kniebeuge" -> {
+                getString(R.string.exercise_squat) -> {
                     cardKniebeuge.setStrokeColor(getColor(R.color.gray_900))
                     cardKniebeuge.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
@@ -186,26 +186,26 @@ class WorkoutInputActivity : AppCompatActivity() {
         when {
             exerciseName.isEmpty() -> {
                 if (isCustomExercise) {
-                    customExerciseEditText.error = "Übung eingeben"
+                    customExerciseEditText.error = getString(R.string.error_enter_exercise)
                 } else {
-                    Toast.makeText(this, "Bitte wähle eine Übung", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.error_select_exercise), Toast.LENGTH_SHORT).show()
                 }
                 return false
             }
             weightText.isEmpty() -> {
-                weightEditText.error = "Gewicht eingeben"
+                weightEditText.error = getString(R.string.error_enter_weight)
                 return false
             }
             repsText.isEmpty() -> {
-                repsEditText.error = "Wiederholungen eingeben"
+                repsEditText.error = getString(R.string.error_enter_reps)
                 return false
             }
             pauseTimeText.isEmpty() -> {
-                pauseTimeEditText.error = "Pausenzeit eingeben"
+                pauseTimeEditText.error = getString(R.string.error_enter_pause)
                 return false
             }
             setsText.isEmpty() -> {
-                setsEditText.error = "Anzahl Sätze eingeben"
+                setsEditText.error = getString(R.string.error_enter_sets)
                 return false
             }
         }

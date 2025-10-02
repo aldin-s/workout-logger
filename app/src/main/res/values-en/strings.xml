@@ -1,0 +1,58 @@
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Workout Tracker</string>
+    
+    <!-- Main Activity -->
+    <string name="main_timer_display">00:00</string>
+    <string name="main_sets_display">0/0</string>
+    <string name="start_workout">START WORKOUT</string>
+    <string name="workout_history">WORKOUT HISTORY</string>
+    
+    <!-- Workout Input Activity -->
+    <string name="select_exercise">SELECT EXERCISE</string>
+    <string name="exercise_deadlift">Deadlift</string>
+    <string name="exercise_bench_press">Bench Press</string>
+    <string name="exercise_rowing">Rowing</string>
+    <string name="exercise_squat">Squat</string>
+    <string name="custom_exercise">+ Custom Exercise</string>
+    <string name="selected_exercise_label">Selected Exercise:</string>
+    <string name="weight_label">Weight (kg)</string>
+    <string name="reps_label">Repetitions</string>
+    <string name="pause_time_label">Rest Time (Seconds)</string>
+    <string name="sets_label">Number of Sets</string>
+    <string name="start_button">START</string>
+    <string name="custom_exercise_hint">Enter exercise name</string>
+    
+    <!-- Timer Activity -->
+    <string name="weight_format">%.1f kg</string>
+    <string name="set_format">Set %1$d/%2$d</string>
+    <string name="pause_running">REST PERIOD…</string>
+    <string name="set_done">SET DONE</string>
+    
+    <!-- Tracking/Completion Activity -->
+    <string name="workout_completed">WORKOUT COMPLETED</string>
+    <string name="back_to_main">BACK TO MAIN MENU</string>
+    <string name="view_history">VIEW HISTORY</string>
+    
+    <!-- Workout History Activity -->
+    <string name="history_title">WORKOUT HISTORY</string>
+    <string name="no_workouts">No workouts recorded yet</string>
+    <string name="workout_date">Date: %s</string>
+    <string name="workout_exercise">Exercise: %s</string>
+    <string name="workout_weight">Weight: %.1f kg</string>
+    <string name="workout_reps">Repetitions: %d</string>
+    
+    <!-- Validation Messages -->
+    <string name="error_select_exercise">Please select an exercise</string>
+    <string name="error_enter_exercise">Enter exercise name</string>
+    <string name="error_enter_weight">Enter weight</string>
+    <string name="error_enter_reps">Enter repetitions</string>
+    <string name="error_enter_pause">Enter rest time</string>
+    <string name="error_enter_sets">Enter number of sets</string>
+    
+    <!-- Plurals -->
+    <plurals name="sets_completed">
+        <item quantity="one">%d set completed</item>
+        <item quantity="other">%d sets completed</item>
+    </plurals>
+</resources>

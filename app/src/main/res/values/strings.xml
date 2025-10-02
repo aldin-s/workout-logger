@@ -1,13 +1,58 @@
 <resources>
+    <!-- App Name -->
     <string name="app_name">Workout Tracker</string>
-    <string name="welcome_message">Welcome to Workout Tracker!</string>
-    <string name="start_workout">Start Workout</string>
-    <string name="timer_label">Timer</string>
-    <string name="done_button">DONE</string>
-    <string name="input_weight">Enter Weight</string>
-    <string name="input_repetitions">Enter Repetitions</string>
-    <string name="input_rest_time">Enter Rest Time</string>
-    <string name="current_set">Current Set: %1$d</string>
-    <string name="repetitions_completed">Repetitions Completed: %1$d</string>
-    <string name="workout_complete">Workout Complete!</string>
+    
+    <!-- Main Activity -->
+    <string name="main_timer_display">00:00</string>
+    <string name="main_sets_display">0/0</string>
+    <string name="start_workout">START WORKOUT</string>
+    <string name="workout_history">WORKOUT HISTORY</string>
+    
+    <!-- Workout Input Activity -->
+    <string name="select_exercise">ÜBUNG WÄHLEN</string>
+    <string name="exercise_deadlift">Kreuzheben</string>
+    <string name="exercise_bench_press">Bankdrücken</string>
+    <string name="exercise_rowing">Rudern</string>
+    <string name="exercise_squat">Kniebeuge</string>
+    <string name="custom_exercise">+ Eigene Übung</string>
+    <string name="selected_exercise_label">Ausgewählte Übung:</string>
+    <string name="weight_label">Gewicht (kg)</string>
+    <string name="reps_label">Wiederholungen</string>
+    <string name="pause_time_label">Pausenzeit (Sekunden)</string>
+    <string name="sets_label">Anzahl Sätze</string>
+    <string name="start_button">START</string>
+    <string name="custom_exercise_hint">Übungsname eingeben</string>
+    
+    <!-- Timer Activity -->
+    <string name="weight_format">%.1f kg</string>
+    <string name="set_format">Satz %1$d/%2$d</string>
+    <string name="pause_running">PAUSE LÄUFT…</string>
+    <string name="set_done">SATZ FERTIG</string>
+    
+    <!-- Tracking/Completion Activity -->
+    <string name="workout_completed">WORKOUT ABGESCHLOSSEN</string>
+    <string name="back_to_main">ZURÜCK ZUM HAUPTMENÜ</string>
+    <string name="view_history">HISTORIE ANSEHEN</string>
+    
+    <!-- Workout History Activity -->
+    <string name="history_title">WORKOUT HISTORIE</string>
+    <string name="no_workouts">Noch keine Workouts aufgezeichnet</string>
+    <string name="workout_date">Datum: %s</string>
+    <string name="workout_exercise">Übung: %s</string>
+    <string name="workout_weight">Gewicht: %.1f kg</string>
+    <string name="workout_reps">Wiederholungen: %d</string>
+    
+    <!-- Validation Messages -->
+    <string name="error_select_exercise">Bitte wähle eine Übung</string>
+    <string name="error_enter_exercise">Übung eingeben</string>
+    <string name="error_enter_weight">Gewicht eingeben</string>
+    <string name="error_enter_reps">Wiederholungen eingeben</string>
+    <string name="error_enter_pause">Pausenzeit eingeben</string>
+    <string name="error_enter_sets">Anzahl Sätze eingeben</string>
+    
+    <!-- Plurals -->
+    <plurals name="sets_completed">
+        <item quantity="one">%d Satz abgeschlossen</item>
+        <item quantity="other">%d Sätze abgeschlossen</item>
+    </plurals>
 </resources>
