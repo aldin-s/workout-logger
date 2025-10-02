@@ -29,7 +29,7 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
         return when (viewType) {
             VIEW_TYPE_HEADER -> {
                 val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_date_header, parent, false)
+                    .inflate(R.layout.item_history_date_header, parent, false)
                 DateHeaderViewHolder(view)
             }
             else -> {
@@ -63,14 +63,18 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
         fun bind(item: HistoryItem.WorkoutItem) {
             val completedSet = item.completedSet
             
+            // Exercise name in uppercase
             exerciseNameTextView.text = completedSet.exerciseName.uppercase()
+            
+            // Format as: "80.0 kg × 10 · Satz 1"
             workoutDetailsTextView.text = String.format(
-                "%.1f kg · %d Wdh · Satz %d",
+                "%.1f kg × %d Wdh · Satz %d",
                 completedSet.weight,
                 completedSet.completedReps,
                 completedSet.setNumber
             )
             
+            // Time format HH:mm
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             timestampTextView.text = timeFormat.format(completedSet.timestamp)
         }

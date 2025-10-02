@@ -19,4 +19,7 @@ interface CompletedSetDao {
     
     @Query("SELECT DISTINCT exerciseName FROM completed_sets ORDER BY exerciseName")
     suspend fun getAllExerciseNames(): List<String>
+    
+    @Query("DELETE FROM completed_sets")
+    suspend fun deleteAll()
 }
