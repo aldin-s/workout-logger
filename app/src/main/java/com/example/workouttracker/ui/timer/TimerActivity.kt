@@ -3,13 +3,13 @@ package com.example.workouttracker.ui.timer
 import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
 import com.example.workouttracker.ui.tracking.TrackingActivity
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,7 +21,7 @@ class TimerActivity : AppCompatActivity() {
     private lateinit var setsTextView: TextView
     private lateinit var exerciseNameTextView: TextView
     private lateinit var weightTextView: TextView
-    private lateinit var doneButton: Button
+    private lateinit var doneButton: MaterialButton
     private var countdownTimer: CountDownTimer? = null
     private var timeLeftInMillis: Long = 0
     private var currentSet: Int = 1
@@ -62,7 +62,7 @@ class TimerActivity : AppCompatActivity() {
         
         // Start timer automatically for first set
         startTimer()
-        doneButton.isEnabled = false // Disabled until timer finishes
+        setButtonDisabled()
 
         doneButton.setOnClickListener {
             markSetAsCompleted()
@@ -71,7 +71,7 @@ class TimerActivity : AppCompatActivity() {
 
     private fun startTimer() {
         timeLeftInMillis = pauseTimeSeconds * 1000L
-        doneButton.isEnabled = false // Disable until timer reaches 00:00
+        setButtonDisabled()
         
         countdownTimer = object : CountDownTimer(timeLeftInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -81,7 +81,7 @@ class TimerActivity : AppCompatActivity() {
 
             override fun onFinish() {
                 timerTextView.text = "00:00"
-                doneButton.isEnabled = true // Enable when timer reaches 00:00
+                setButtonEnabled()
             }
         }.start()
     }
@@ -93,6 +93,20 @@ class TimerActivity : AppCompatActivity() {
 
     private fun updateSetsDisplay() {
         setsTextView.text = "Satz $currentSet/$totalSets"
+    }
+    
+    private fun setButtonDisabled() {
+        doneButton.isEnabled = false
+        doneButton.text = "PAUSE LÄUFT..."
+        doneButton.alpha = 0.5f
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_400))
+    }
+    
+    private fun setButtonEnabled() {
+        doneButton.isEnabled = true
+        doneButton.text = "SATZ FERTIG"
+        doneButton.alpha = 1.0f
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_900))
     }
 
     private fun markSetAsCompleted() {

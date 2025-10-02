@@ -166,8 +166,8 @@ class WorkoutInputActivity : AppCompatActivity() {
 
 
     private fun setDefaultValues() {
-        pauseTimeEditText.setText("60") // Default 60 seconds pause
-        setsEditText.setText("3") // Default 3 sets
+        pauseTimeEditText.setText("120") // Default 60 seconds pause
+        setsEditText.setText("5") // Default 3 sets
     }
 
     private fun validateInput(): Boolean {
