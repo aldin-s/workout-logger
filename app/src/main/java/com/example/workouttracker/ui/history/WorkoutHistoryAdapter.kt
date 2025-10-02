@@ -61,22 +61,38 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
         private val timestampTextView: TextView = itemView.findViewById(R.id.timestampTextView)
 
         fun bind(item: HistoryItem.WorkoutItem) {
-            val completedSet = item.completedSet
+            val session = item.session
+            val context = itemView.context
             
             // Exercise name in uppercase
-            exerciseNameTextView.text = completedSet.exerciseName.uppercase()
+            exerciseNameTextView.text = session.exerciseName.uppercase()
             
-            // Format as: "80.0 kg × 10 · Satz 1"
+            // Format as: "80.0 kg × 10 Wdh"
             workoutDetailsTextView.text = String.format(
-                "%.1f kg × %d Wdh · Satz %d",
-                completedSet.weight,
-                completedSet.completedReps,
-                completedSet.setNumber
+                "%.1f kg × %d Wdh",
+                session.weight,
+                session.reps
             )
             
-            // Time format HH:mm
+            // Time range: "14:23 - 14:27" or just "14:23" if single set
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            timestampTextView.text = timeFormat.format(completedSet.timestamp)
+            val startTime = timeFormat.format(session.startTime)
+            val endTime = timeFormat.format(session.endTime)
+            
+            // Use plurals for "X Sätze abgeschlossen"
+            val setsText = context.resources.getQuantityString(
+                com.example.workouttracker.R.plurals.sets_completed,
+                session.totalSets,
+                session.totalSets
+            )
+            
+            timestampTextView.text = if (startTime == endTime) {
+                // Single set or very quick workout
+                "$setsText · $startTime"
+            } else {
+                // Multiple sets with time range
+                "$setsText · $startTime - $endTime"
+            }
         }
     }
 
@@ -86,7 +102,8 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
                 oldItem is HistoryItem.DateHeader && newItem is HistoryItem.DateHeader ->
                     oldItem.dateLabel == newItem.dateLabel
                 oldItem is HistoryItem.WorkoutItem && newItem is HistoryItem.WorkoutItem ->
-                    oldItem.completedSet.id == newItem.completedSet.id
+                    oldItem.session.startTime == newItem.session.startTime &&
+                    oldItem.session.exerciseName == newItem.session.exerciseName
                 else -> false
             }
         }
