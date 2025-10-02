@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Workout Tracker</string>
+    <string name="welcome_message">Welcome to Workout Tracker!</string>
+    <string name="start_workout">Start Workout</string>
+    <string name="timer_label">Timer</string>
+    <string name="done_button">DONE</string>
+    <string name="input_weight">Enter Weight</string>
+    <string name="input_repetitions">Enter Repetitions</string>
+    <string name="input_rest_time">Enter Rest Time</string>
+    <string name="current_set">Current Set: %1$d</string>
+    <string name="repetitions_completed">Repetitions Completed: %1$d</string>
+    <string name="workout_complete">Workout Complete!</string>
+</resources>

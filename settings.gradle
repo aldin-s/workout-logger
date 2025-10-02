@@ -1,0 +1,3 @@
+rootProject.name = "workout-tracker"
+
+include ':app'
