@@ -100,7 +100,7 @@ class WorkoutInputActivity : AppCompatActivity() {
         selectedExercise = exercise
         isCustomExercise = custom
         
-        // Reset all card borders
+        // Reset all card borders FIRST
         resetCardBorders()
         
         if (custom) {
@@ -108,7 +108,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             customExerciseLayout.visibility = View.VISIBLE
             selectedExerciseLabel.visibility = View.GONE
             selectedExerciseText.visibility = View.GONE
-            // Highlight with darker border
+            // Highlight with white border
             cardCustomExercise.setStrokeColor(getColor(R.color.gray_900))
             cardCustomExercise.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
         } else {
@@ -118,7 +118,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             selectedExerciseText.visibility = View.VISIBLE
             selectedExerciseText.text = exercise
             
-            // Highlight selected card with darker border
+            // Highlight selected card with white border
             when (exercise) {
                 "Kreuzheben" -> {
                     cardKreuzheben.setStrokeColor(getColor(R.color.gray_900))
@@ -152,7 +152,7 @@ class WorkoutInputActivity : AppCompatActivity() {
         cardRudern.setStrokeWidth(defaultStrokeWidth)
         cardKniebeuge.setStrokeColor(defaultStrokeColor)
         cardKniebeuge.setStrokeWidth(defaultStrokeWidth)
-        cardCustomExercise.setStrokeColor(getColor(R.color.gray_400))
+        cardCustomExercise.setStrokeColor(defaultStrokeColor)
         cardCustomExercise.setStrokeWidth(defaultStrokeWidth)
     }
 

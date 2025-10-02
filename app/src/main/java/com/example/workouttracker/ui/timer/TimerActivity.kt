@@ -19,6 +19,8 @@ class TimerActivity : AppCompatActivity() {
 
     private lateinit var timerTextView: TextView
     private lateinit var setsTextView: TextView
+    private lateinit var exerciseNameTextView: TextView
+    private lateinit var weightTextView: TextView
     private lateinit var doneButton: Button
     private var countdownTimer: CountDownTimer? = null
     private var timeLeftInMillis: Long = 0
@@ -39,6 +41,8 @@ class TimerActivity : AppCompatActivity() {
 
         timerTextView = findViewById(R.id.timerTextView)
         setsTextView = findViewById(R.id.setsTextView)
+        exerciseNameTextView = findViewById(R.id.exerciseNameTextView)
+        weightTextView = findViewById(R.id.weightTextView)
         doneButton = findViewById(R.id.doneButton)
 
         // Get workout data from intent
@@ -51,9 +55,14 @@ class TimerActivity : AppCompatActivity() {
         database = WorkoutDatabase.getDatabase(this)
         
         // Initialize display
+        exerciseNameTextView.text = exerciseName.uppercase()
+        weightTextView.text = String.format("%.1f kg", weight)
         updateSetsDisplay()
-        timerTextView.text = "00:00"
-        doneButton.isEnabled = true // First set can start immediately
+        timerTextView.text = String.format("%02d:%02d", pauseTimeSeconds / 60, pauseTimeSeconds % 60)
+        
+        // Start timer automatically for first set
+        startTimer()
+        doneButton.isEnabled = false // Disabled until timer finishes
 
         doneButton.setOnClickListener {
             markSetAsCompleted()
@@ -83,7 +92,7 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun updateSetsDisplay() {
-        setsTextView.text = "$currentSet/$totalSets"
+        setsTextView.text = "Satz $currentSet/$totalSets"
     }
 
     private fun markSetAsCompleted() {
