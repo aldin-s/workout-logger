@@ -13,6 +13,7 @@ class TrackingActivity : AppCompatActivity() {
 
     private lateinit var completionTitleTextView: TextView
     private lateinit var exerciseNameTextView: TextView
+    private lateinit var weightTextView: TextView
     private lateinit var setsCompletedTextView: TextView
     private lateinit var backToMainButton: Button
     private lateinit var viewHistoryButton: Button
@@ -23,6 +24,7 @@ class TrackingActivity : AppCompatActivity() {
 
         completionTitleTextView = findViewById(R.id.completionTitleTextView)
         exerciseNameTextView = findViewById(R.id.exerciseNameTextView)
+        weightTextView = findViewById(R.id.weightTextView)
         setsCompletedTextView = findViewById(R.id.setsCompletedTextView)
         backToMainButton = findViewById(R.id.backToMainButton)
         viewHistoryButton = findViewById(R.id.viewHistoryButton)
@@ -30,9 +32,11 @@ class TrackingActivity : AppCompatActivity() {
         // Get data from intent
         val setsCompleted = intent.getIntExtra("SETS_COMPLETED", 0)
         val exerciseName = intent.getStringExtra("EXERCISE_NAME") ?: "Übung"
+        val weight = intent.getDoubleExtra("WEIGHT", 0.0)
 
         // Update UI with completion data
-        exerciseNameTextView.text = exerciseName
+        exerciseNameTextView.text = exerciseName.uppercase()
+        weightTextView.text = String.format("%.1f kg", weight)
         setsCompletedTextView.text = "$setsCompleted Sätze abgeschlossen"
 
         backToMainButton.setOnClickListener {

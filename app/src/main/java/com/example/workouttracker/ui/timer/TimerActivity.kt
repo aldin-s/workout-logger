@@ -142,6 +142,7 @@ class TimerActivity : AppCompatActivity() {
         val intent = Intent(this, TrackingActivity::class.java)
         intent.putExtra("SETS_COMPLETED", currentSet)
         intent.putExtra("EXERCISE_NAME", exerciseName)
+        intent.putExtra("WEIGHT", weight)
         startActivity(intent)
         finish()
     }
