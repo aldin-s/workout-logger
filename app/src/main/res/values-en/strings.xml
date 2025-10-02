@@ -42,6 +42,15 @@
     <string name="workout_weight">Weight: %.1f kg</string>
     <string name="workout_reps">Repetitions: %d</string>
     
+    <!-- Date Headers -->
+    <string name="date_today">TODAY</string>
+    <string name="date_yesterday">YESTERDAY</string>
+    <string name="date_this_week">THIS WEEK</string>
+    <string name="date_last_week">LAST WEEK</string>
+    <string name="date_this_month">THIS MONTH</string>
+    <string name="date_last_month">LAST MONTH</string>
+    <string name="date_older">OLDER</string>
+    
     <!-- Validation Messages -->
     <string name="error_select_exercise">Please select an exercise</string>
     <string name="error_enter_exercise">Enter exercise name</string>

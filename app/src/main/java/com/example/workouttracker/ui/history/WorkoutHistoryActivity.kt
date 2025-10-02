@@ -38,7 +38,8 @@ class WorkoutHistoryActivity : AppCompatActivity() {
     private fun loadWorkoutHistory() {
         lifecycleScope.launch {
             val completedSets = database.completedSetDao().getAllSets()
-            adapter.submitList(completedSets)
+            val groupedItems = HistoryGrouper.groupByDate(completedSets, this@WorkoutHistoryActivity)
+            adapter.submitList(groupedItems)
         }
     }
 }

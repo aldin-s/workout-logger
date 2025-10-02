@@ -8,44 +8,86 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.workouttracker.R
-import com.example.workouttracker.data.model.CompletedSet
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class WorkoutHistoryAdapter : ListAdapter<CompletedSet, WorkoutHistoryAdapter.ViewHolder>(DiffCallback()) {
+class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_workout_history, parent, false)
-        return ViewHolder(view)
+    companion object {
+        private const val VIEW_TYPE_HEADER = 0
+        private const val VIEW_TYPE_ITEM = 1
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+    override fun getItemViewType(position: Int): Int {
+        return when (getItem(position)) {
+            is HistoryItem.DateHeader -> VIEW_TYPE_HEADER
+            is HistoryItem.WorkoutItem -> VIEW_TYPE_ITEM
+        }
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            VIEW_TYPE_HEADER -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_date_header, parent, false)
+                DateHeaderViewHolder(view)
+            }
+            else -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_workout_history, parent, false)
+                WorkoutViewHolder(view)
+            }
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (val item = getItem(position)) {
+            is HistoryItem.DateHeader -> (holder as DateHeaderViewHolder).bind(item)
+            is HistoryItem.WorkoutItem -> (holder as WorkoutViewHolder).bind(item)
+        }
+    }
+
+    class DateHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val dateHeaderTextView: TextView = itemView.findViewById(R.id.dateHeaderTextView)
+
+        fun bind(header: HistoryItem.DateHeader) {
+            dateHeaderTextView.text = header.dateLabel
+        }
+    }
+
+    class WorkoutViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val exerciseNameTextView: TextView = itemView.findViewById(R.id.exerciseNameTextView)
-        private val weightRepsTextView: TextView = itemView.findViewById(R.id.weightRepsTextView)
-        private val setInfoTextView: TextView = itemView.findViewById(R.id.setInfoTextView)
+        private val workoutDetailsTextView: TextView = itemView.findViewById(R.id.workoutDetailsTextView)
         private val timestampTextView: TextView = itemView.findViewById(R.id.timestampTextView)
 
-        fun bind(completedSet: CompletedSet) {
-            exerciseNameTextView.text = completedSet.exerciseName
-            weightRepsTextView.text = "${completedSet.weight}kg × ${completedSet.completedReps} reps"
-            setInfoTextView.text = "Set ${completedSet.setNumber}"
+        fun bind(item: HistoryItem.WorkoutItem) {
+            val completedSet = item.completedSet
             
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            timestampTextView.text = dateFormat.format(completedSet.timestamp)
+            exerciseNameTextView.text = completedSet.exerciseName.uppercase()
+            workoutDetailsTextView.text = String.format(
+                "%.1f kg · %d Wdh · Satz %d",
+                completedSet.weight,
+                completedSet.completedReps,
+                completedSet.setNumber
+            )
+            
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            timestampTextView.text = timeFormat.format(completedSet.timestamp)
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<CompletedSet>() {
-        override fun areItemsTheSame(oldItem: CompletedSet, newItem: CompletedSet): Boolean {
-            return oldItem.id == newItem.id
+    class DiffCallback : DiffUtil.ItemCallback<HistoryItem>() {
+        override fun areItemsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
+            return when {
+                oldItem is HistoryItem.DateHeader && newItem is HistoryItem.DateHeader ->
+                    oldItem.dateLabel == newItem.dateLabel
+                oldItem is HistoryItem.WorkoutItem && newItem is HistoryItem.WorkoutItem ->
+                    oldItem.completedSet.id == newItem.completedSet.id
+                else -> false
+            }
         }
 
-        override fun areContentsTheSame(oldItem: CompletedSet, newItem: CompletedSet): Boolean {
+        override fun areContentsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
             return oldItem == newItem
         }
     }
