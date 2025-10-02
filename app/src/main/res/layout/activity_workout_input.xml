@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,86 +14,330 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Übung eingeben"
-            android:textSize="24sp"
+            android:text="Übung wählen"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:layout_marginBottom="24dp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp"
             android:gravity="center" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Übung:"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+            android:text="Wähle eine Übung oder erstelle eine eigene"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="24dp"
+            android:gravity="center" />
 
-        <EditText
-            android:id="@+id/exerciseNameEditText"
+        <!-- Exercise Grid -->
+        <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:hint="z.B. Bankdrücken"
-            android:layout_marginBottom="16dp" />
+            android:columnCount="2"
+            android:rowCount="3"
+            android:alignmentMode="alignMargins"
+            android:layout_marginBottom="24dp">
+
+            <!-- Kreuzheben -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardKreuzheben"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:layout_columnWeight="1"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💪"
+                        android:textSize="48sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kreuzheben"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#212121"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Bankdrücken -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardBankdruecken"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_row="0"
+                android:layout_column="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🏋️"
+                        android:textSize="48sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bankdrücken"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#212121"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Rudern -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardRudern"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_row="1"
+                android:layout_column="0"
+                android:layout_columnWeight="1"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚣"
+                        android:textSize="48sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rudern"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#212121"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Kniebeuge -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardKniebeuge"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_row="1"
+                android:layout_column="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🦵"
+                        android:textSize="48sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kniebeuge"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#212121"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Eigene Übung (spans 2 columns) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardCustomExercise"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_row="2"
+                android:layout_column="0"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E3F2FD"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="➕"
+                        android:textSize="48sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Eigene Übung"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:gravity="center"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </GridLayout>
+
+        <!-- Selected Exercise Display -->
+        <TextView
+            android:id="@+id/selectedExerciseLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ausgewählt:"
+            android:textSize="16sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
 
         <TextView
+            android:id="@+id/selectedExerciseText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Gewicht (kg):"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+            android:text="Bankdrücken"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1976D2"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
 
-        <EditText
-            android:id="@+id/weightEditText"
+        <!-- Custom Exercise Input (hidden by default) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/customExerciseLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:hint="z.B. 80.5"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:boxBackgroundMode="outline">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Wiederholungen:"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/customExerciseEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Übungsname eingeben"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/repsEditText"
+        <!-- Workout Parameters -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="z.B. 10"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            app:boxBackgroundMode="outline">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Pausenzeit (Sekunden):"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/weightEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Gewicht (kg)"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/pauseTimeEditText"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="z.B. 60"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            app:boxBackgroundMode="outline">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Anzahl Sätze:"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/repsEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Wiederholungen"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/setsEditText"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="z.B. 3"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="16dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/pauseTimeEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Pausenzeit (Sekunden)"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/setsEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Anzahl Sätze"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/startButton"

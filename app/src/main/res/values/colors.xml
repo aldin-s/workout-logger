@@ -15,4 +15,8 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Exercise selection colors -->
+    <color name="exercise_selected">#E8F5E9</color>
+    <color name="exercise_custom_bg">#E3F2FD</color>
 </resources>
