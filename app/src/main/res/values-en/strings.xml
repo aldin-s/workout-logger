@@ -138,6 +138,12 @@
     <string name="empty_history_title">No workouts yet</string>
     <string name="empty_history_message">Start your first training</string>
     
+    <!-- Input Validation -->
+    <string name="error_weight_invalid">Weight must be greater than 0</string>
+    <string name="error_reps_invalid">Reps must be greater than 0</string>
+    <string name="error_sets_invalid">Sets must be greater than 0</string>
+    <string name="error_pause_invalid">Pause time must be greater than 0</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>

@@ -210,6 +210,35 @@ class WorkoutInputActivity : AppCompatActivity() {
                 return false
             }
         }
+        
+        // Validate numeric values (only minimum checks, no maximum limits)
+        val weight = weightText.toDoubleOrNull()
+        val reps = repsText.toIntOrNull()
+        val pauseTime = pauseTimeText.toIntOrNull()
+        val sets = setsText.toIntOrNull()
+        
+        when {
+            weight == null || weight <= 0 -> {
+                weightEditText.error = getString(R.string.error_weight_invalid)
+                weightEditText.requestFocus()
+                return false
+            }
+            reps == null || reps <= 0 -> {
+                repsEditText.error = getString(R.string.error_reps_invalid)
+                repsEditText.requestFocus()
+                return false
+            }
+            pauseTime == null || pauseTime <= 0 -> {
+                pauseTimeEditText.error = getString(R.string.error_pause_invalid)
+                pauseTimeEditText.requestFocus()
+                return false
+            }
+            sets == null || sets <= 0 -> {
+                setsEditText.error = getString(R.string.error_sets_invalid)
+                setsEditText.requestFocus()
+                return false
+            }
+        }
 
         return true
     }
