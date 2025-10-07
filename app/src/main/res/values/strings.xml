@@ -86,6 +86,54 @@
     <string name="error_update_workout">Workout konnte nicht aktualisiert werden</string>
     <string name="ok">OK</string>
     
+    <!-- Settings -->
+    <string name="settings">Einstellungen</string>
+    <string name="settings_notifications">Benachrichtigungen</string>
+    <string name="settings_timer">Timer</string>
+    <string name="settings_appearance">Darstellung</string>
+    <string name="settings_data">Daten</string>
+    <string name="settings_about">Über REPS</string>
+    
+    <!-- Settings - Notifications -->
+    <string name="vibration_on_timer_end">Vibration bei Timer-Ende</string>
+    <string name="vibration_duration">Vibrationsdauer</string>
+    <string name="vibration_short">Kurz (200ms)</string>
+    <string name="vibration_medium">Mittel (500ms)</string>
+    <string name="vibration_long">Lang (1000ms)</string>
+    <string name="sound_on_timer_end">Sound bei Timer-Ende</string>
+    
+    <!-- Settings - Timer -->
+    <string name="default_pause_time">Standard-Pausenzeit</string>
+    <string name="pause_time_seconds">%d Sekunden</string>
+    
+    <!-- Settings - Appearance -->
+    <string name="language">Sprache</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_english">English</string>
+    
+    <!-- Settings - Data -->
+    <string name="export_history">Historie exportieren</string>
+    <string name="import_history">Historie importieren</string>
+    <string name="delete_all_data">Alle Daten löschen</string>
+    <string name="delete_all_warning">Kann nicht rückgängig gemacht werden</string>
+    <string name="export_format_title">Format auswählen</string>
+    <string name="export_csv">CSV (Excel, Google Sheets)</string>
+    <string name="export_json">JSON (Backup, Entwickler)</string>
+    <string name="export_success">Export erfolgreich</string>
+    <string name="export_error">Export fehlgeschlagen</string>
+    <string name="import_success">%d Workouts importiert</string>
+    <string name="import_error">Import fehlgeschlagen</string>
+    <string name="import_confirm_title">Import bestätigen</string>
+    <string name="import_confirm_message">%d Workouts\n%d Sätze\nZeitraum: %s bis %s</string>
+    <string name="import_warning">Duplikate werden übersprungen</string>
+    <string name="delete_confirm_title">Alle Daten löschen?</string>
+    <string name="delete_confirm_message">Diese Aktion kann nicht rückgängig gemacht werden. Alle Workouts und Einstellungen werden gelöscht.</string>
+    <string name="delete_success">Alle Daten gelöscht</string>
+    
+    <!-- Settings - About -->
+    <string name="app_version">Version %s</string>
+    <string name="app_copyright">© 2025</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d Satz abgeschlossen</item>

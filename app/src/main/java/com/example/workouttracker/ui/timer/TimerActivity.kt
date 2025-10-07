@@ -1,14 +1,20 @@
 package com.example.workouttracker.ui.timer
 
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
+import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.tracking.TrackingActivity
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
@@ -107,6 +113,7 @@ class TimerActivity : AppCompatActivity() {
                 isTimerRunning = false
                 timerTextView.text = "00:00"
                 setButtonEnabled()
+                triggerVibration()
             }
         }.start()
     }
@@ -187,6 +194,30 @@ class TimerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         countdownTimer?.cancel()
+    }
+    
+    private fun triggerVibration() {
+        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val vibrationEnabled = prefs.getBoolean(SettingsActivity.PREF_VIBRATION_ENABLED, true)
+        
+        if (!vibrationEnabled) return
+        
+        val duration = prefs.getInt(SettingsActivity.PREF_VIBRATION_DURATION, 500).toLong()
+        
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration)
+        }
     }
     
     companion object {

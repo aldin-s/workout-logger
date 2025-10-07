@@ -86,6 +86,54 @@
     <string name="error_update_workout">Could not update workout</string>
     <string name="ok">OK</string>
     
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_timer">Timer</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_about">About REPS</string>
+    
+    <!-- Settings - Notifications -->
+    <string name="vibration_on_timer_end">Vibration on timer end</string>
+    <string name="vibration_duration">Vibration duration</string>
+    <string name="vibration_short">Short (200ms)</string>
+    <string name="vibration_medium">Medium (500ms)</string>
+    <string name="vibration_long">Long (1000ms)</string>
+    <string name="sound_on_timer_end">Sound on timer end</string>
+    
+    <!-- Settings - Timer -->
+    <string name="default_pause_time">Default pause time</string>
+    <string name="pause_time_seconds">%d seconds</string>
+    
+    <!-- Settings - Appearance -->
+    <string name="language">Language</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_english">English</string>
+    
+    <!-- Settings - Data -->
+    <string name="export_history">Export history</string>
+    <string name="import_history">Import history</string>
+    <string name="delete_all_data">Delete all data</string>
+    <string name="delete_all_warning">Cannot be undone</string>
+    <string name="export_format_title">Select format</string>
+    <string name="export_csv">CSV (Excel, Google Sheets)</string>
+    <string name="export_json">JSON (Backup, Developer)</string>
+    <string name="export_success">Export successful</string>
+    <string name="export_error">Export failed</string>
+    <string name="import_success">%d workouts imported</string>
+    <string name="import_error">Import failed</string>
+    <string name="import_confirm_title">Confirm import</string>
+    <string name="import_confirm_message">%d workouts\n%d sets\nPeriod: %s to %s</string>
+    <string name="import_warning">Duplicates will be skipped</string>
+    <string name="delete_confirm_title">Delete all data?</string>
+    <string name="delete_confirm_message">This action cannot be undone. All workouts and settings will be deleted.</string>
+    <string name="delete_success">All data deleted</string>
+    
+    <!-- Settings - About -->
+    <string name="app_version">Version %s</string>
+    <string name="app_copyright">© 2025</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>

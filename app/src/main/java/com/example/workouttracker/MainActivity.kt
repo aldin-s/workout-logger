@@ -3,11 +3,13 @@ package com.example.workouttracker
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.ui.history.WorkoutHistoryActivity
+import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.workout.WorkoutInputActivity
 import com.example.workouttracker.utils.TestDataGenerator
 
@@ -17,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var setsTextView: TextView
     private lateinit var startWorkoutButton: Button
     private lateinit var historyButton: Button
+    private lateinit var settingsButton: ImageButton
     private lateinit var database: WorkoutDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         setsTextView = findViewById(R.id.setsTextView)
         startWorkoutButton = findViewById(R.id.startWorkoutButton)
         historyButton = findViewById(R.id.historyButton)
+        settingsButton = findViewById(R.id.settingsButton)
     }
 
     private fun initializeDisplays() {
@@ -51,6 +55,11 @@ class MainActivity : AppCompatActivity() {
 
         historyButton.setOnClickListener {
             val intent = Intent(this, WorkoutHistoryActivity::class.java)
+            startActivity(intent)
+        }
+        
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
             startActivity(intent)
         }
     }
