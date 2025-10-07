@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
@@ -123,14 +124,14 @@ class TimerActivity : AppCompatActivity() {
         doneButton.isEnabled = false
         doneButton.text = getString(R.string.pause_running)
         doneButton.alpha = 0.5f
-        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_400))
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.gray_400))
     }
     
     private fun setButtonEnabled() {
         doneButton.isEnabled = true
         doneButton.text = getString(R.string.set_done)
         doneButton.alpha = 1.0f
-        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(getColor(R.color.gray_900))
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.gray_900))
     }
 
     private fun markSetAsCompleted() {

@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.example.workouttracker.R
 import com.example.workouttracker.ui.timer.TimerActivity
@@ -109,7 +110,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             selectedExerciseLabel.visibility = View.GONE
             selectedExerciseText.visibility = View.GONE
             // Highlight with white border
-            cardCustomExercise.setStrokeColor(getColor(R.color.gray_900))
+            cardCustomExercise.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
             cardCustomExercise.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
         } else {
             // Show selected exercise
@@ -121,19 +122,19 @@ class WorkoutInputActivity : AppCompatActivity() {
             // Highlight selected card with white border
             when (exercise) {
                 getString(R.string.exercise_deadlift) -> {
-                    cardKreuzheben.setStrokeColor(getColor(R.color.gray_900))
+                    cardKreuzheben.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
                     cardKreuzheben.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
                 getString(R.string.exercise_bench_press) -> {
-                    cardBankdruecken.setStrokeColor(getColor(R.color.gray_900))
+                    cardBankdruecken.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
                     cardBankdruecken.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
                 getString(R.string.exercise_rowing) -> {
-                    cardRudern.setStrokeColor(getColor(R.color.gray_900))
+                    cardRudern.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
                     cardRudern.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
                 getString(R.string.exercise_squat) -> {
-                    cardKniebeuge.setStrokeColor(getColor(R.color.gray_900))
+                    cardKniebeuge.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
                     cardKniebeuge.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
                 }
             }
@@ -141,7 +142,7 @@ class WorkoutInputActivity : AppCompatActivity() {
     }
     
     private fun resetCardBorders() {
-        val defaultStrokeColor = getColor(R.color.gray_200)
+        val defaultStrokeColor = ContextCompat.getColor(this, R.color.gray_200)
         val defaultStrokeWidth = resources.getDimensionPixelSize(R.dimen.card_stroke_default)
         
         cardKreuzheben.setStrokeColor(defaultStrokeColor)
