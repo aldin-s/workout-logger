@@ -59,6 +59,24 @@
     <string name="error_enter_pause">Pausenzeit eingeben</string>
     <string name="error_enter_sets">Anzahl Sätze eingeben</string>
     
+    <!-- Edit/Delete Actions -->
+    <string name="action_edit">Bearbeiten</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="workout_actions">Session Aktionen</string>
+    
+    <!-- Edit Dialog -->
+    <string name="edit_workout">Workout bearbeiten</string>
+    <string name="save">Speichern</string>
+    <string name="workout_updated">Workout aktualisiert</string>
+    <string name="error_invalid_input">Ungültige Eingabe</string>
+    
+    <!-- Delete Dialog -->
+    <string name="delete_workout_title">Workout löschen?</string>
+    <string name="delete_workout_message">%1$s (%2$d Sätze) wird permanent gelöscht.</string>
+    <string name="delete">Löschen</string>
+    <string name="workout_deleted">Workout gelöscht</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d Satz abgeschlossen</item>

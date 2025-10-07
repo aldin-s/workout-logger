@@ -1,8 +1,10 @@
 package com.example.workouttracker.data.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.example.workouttracker.data.model.CompletedSet
 
 @Dao
@@ -10,6 +12,15 @@ interface CompletedSetDao {
     
     @Insert
     suspend fun insert(completedSet: CompletedSet)
+    
+    @Update
+    suspend fun update(completedSet: CompletedSet)
+    
+    @Delete
+    suspend fun delete(completedSet: CompletedSet)
+    
+    @Query("DELETE FROM completed_sets WHERE id = :setId")
+    suspend fun deleteById(setId: Long)
     
     @Query("SELECT * FROM completed_sets ORDER BY timestamp DESC")
     suspend fun getAllSets(): List<CompletedSet>

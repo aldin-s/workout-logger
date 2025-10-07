@@ -59,6 +59,24 @@
     <string name="error_enter_pause">Enter rest time</string>
     <string name="error_enter_sets">Enter number of sets</string>
     
+    <!-- Edit/Delete Actions -->
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="workout_actions">Session Actions</string>
+    
+    <!-- Edit Dialog -->
+    <string name="edit_workout">Edit Workout</string>
+    <string name="save">Save</string>
+    <string name="workout_updated">Workout updated</string>
+    <string name="error_invalid_input">Invalid input</string>
+    
+    <!-- Delete Dialog -->
+    <string name="delete_workout_title">Delete workout?</string>
+    <string name="delete_workout_message">%1$s (%2$d sets) will be permanently deleted.</string>
+    <string name="delete">Delete</string>
+    <string name="workout_deleted">Workout deleted</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>

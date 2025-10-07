@@ -11,7 +11,9 @@ import com.example.workouttracker.R
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(DiffCallback()) {
+class WorkoutHistoryAdapter(
+    private val onItemLongClick: ((WorkoutSession) -> Unit)? = null
+) : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
         private const val VIEW_TYPE_HEADER = 0
@@ -43,7 +45,7 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = getItem(position)) {
             is HistoryItem.DateHeader -> (holder as DateHeaderViewHolder).bind(item)
-            is HistoryItem.WorkoutItem -> (holder as WorkoutViewHolder).bind(item)
+            is HistoryItem.WorkoutItem -> (holder as WorkoutViewHolder).bind(item, onItemLongClick)
         }
     }
 
@@ -60,7 +62,7 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
         private val workoutDetailsTextView: TextView = itemView.findViewById(R.id.workoutDetailsTextView)
         private val timestampTextView: TextView = itemView.findViewById(R.id.timestampTextView)
 
-        fun bind(item: HistoryItem.WorkoutItem) {
+        fun bind(item: HistoryItem.WorkoutItem, onItemLongClick: ((WorkoutSession) -> Unit)? = null) {
             val session = item.session
             val context = itemView.context
             
@@ -83,6 +85,12 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
             
             // Format timestamp with date based on age
             timestampTextView.text = formatTimestamp(session.startTime, session.endTime, context)
+            
+            // Long-click listener for edit/delete
+            itemView.setOnLongClickListener {
+                onItemLongClick?.invoke(session)
+                true
+            }
         }
         
         private fun formatTimestamp(startTime: java.util.Date, endTime: java.util.Date, context: android.content.Context): String {
