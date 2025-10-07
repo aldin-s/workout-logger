@@ -77,6 +77,15 @@
     <string name="delete">Delete</string>
     <string name="workout_deleted">Workout deleted</string>
     
+    <!-- Error Messages -->
+    <string name="error_title">Oops!</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_load_history">Could not load workout history</string>
+    <string name="error_save_workout">Could not save workout</string>
+    <string name="error_delete_workout">Could not delete workout</string>
+    <string name="error_update_workout">Could not update workout</string>
+    <string name="ok">OK</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>

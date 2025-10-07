@@ -159,7 +159,18 @@ class TimerActivity : AppCompatActivity() {
         )
         
         CoroutineScope(Dispatchers.IO).launch {
-            database.completedSetDao().insert(completedSet)
+            try {
+                database.completedSetDao().insert(completedSet)
+            } catch (e: Exception) {
+                android.util.Log.e("TimerActivity", "Error logging completed set", e)
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    androidx.appcompat.app.AlertDialog.Builder(this@TimerActivity)
+                        .setTitle(R.string.error_title)
+                        .setMessage(R.string.error_save_workout)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
         }
     }
 

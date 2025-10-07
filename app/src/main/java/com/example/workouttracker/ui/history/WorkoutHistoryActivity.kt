@@ -50,9 +50,20 @@ class WorkoutHistoryActivity : AppCompatActivity() {
 
     private fun loadWorkoutHistory() {
         lifecycleScope.launch {
-            val completedSets = database.completedSetDao().getAllSets()
-            val groupedItems = HistoryGrouper.groupByDate(completedSets, this@WorkoutHistoryActivity)
-            adapter.submitList(groupedItems)
+            try {
+                val completedSets = database.completedSetDao().getAllSets()
+                val groupedItems = HistoryGrouper.groupByDate(completedSets, this@WorkoutHistoryActivity)
+                adapter.submitList(groupedItems)
+            } catch (e: Exception) {
+                android.util.Log.e("WorkoutHistory", "Error loading history", e)
+                withContext(Dispatchers.Main) {
+                    AlertDialog.Builder(this@WorkoutHistoryActivity)
+                        .setTitle(R.string.error_title)
+                        .setMessage(R.string.error_load_history)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
         }
     }
     
@@ -121,38 +132,60 @@ class WorkoutHistoryActivity : AppCompatActivity() {
     
     private fun updateSession(session: WorkoutSession, newWeight: Double, newReps: Int) {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Update all sets in the session
-            session.sets.forEach { set ->
-                database.completedSetDao().update(
-                    set.copy(
-                        weight = newWeight,
-                        completedReps = newReps,
-                        plannedReps = newReps
+            try {
+                // Update all sets in the session
+                session.sets.forEach { set ->
+                    database.completedSetDao().update(
+                        set.copy(
+                            weight = newWeight,
+                            completedReps = newReps,
+                            plannedReps = newReps
+                        )
                     )
-                )
-            }
-            
-            withContext(Dispatchers.Main) {
-                loadWorkoutHistory() // Refresh UI
-                Toast.makeText(this@WorkoutHistoryActivity, 
-                    R.string.workout_updated, 
-                    Toast.LENGTH_SHORT).show()
+                }
+                
+                withContext(Dispatchers.Main) {
+                    loadWorkoutHistory() // Refresh UI
+                    Toast.makeText(this@WorkoutHistoryActivity, 
+                        R.string.workout_updated, 
+                        Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WorkoutHistory", "Error updating workout", e)
+                withContext(Dispatchers.Main) {
+                    AlertDialog.Builder(this@WorkoutHistoryActivity)
+                        .setTitle(R.string.error_title)
+                        .setMessage(R.string.error_update_workout)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
             }
         }
     }
     
     private fun deleteSession(session: WorkoutSession) {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Delete all sets in the session
-            session.sets.forEach { set ->
-                database.completedSetDao().delete(set)
-            }
-            
-            withContext(Dispatchers.Main) {
-                loadWorkoutHistory() // Refresh UI
-                Toast.makeText(this@WorkoutHistoryActivity, 
-                    R.string.workout_deleted, 
-                    Toast.LENGTH_SHORT).show()
+            try {
+                // Delete all sets in the session
+                session.sets.forEach { set ->
+                    database.completedSetDao().delete(set)
+                }
+                
+                withContext(Dispatchers.Main) {
+                    loadWorkoutHistory() // Refresh UI
+                    Toast.makeText(this@WorkoutHistoryActivity, 
+                        R.string.workout_deleted, 
+                        Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WorkoutHistory", "Error deleting workout", e)
+                withContext(Dispatchers.Main) {
+                    AlertDialog.Builder(this@WorkoutHistoryActivity)
+                        .setTitle(R.string.error_title)
+                        .setMessage(R.string.error_delete_workout)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
             }
         }
     }

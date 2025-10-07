@@ -77,6 +77,15 @@
     <string name="delete">Löschen</string>
     <string name="workout_deleted">Workout gelöscht</string>
     
+    <!-- Error Messages -->
+    <string name="error_title">Ups!</string>
+    <string name="error_generic">Etwas ist schiefgelaufen. Bitte versuche es erneut.</string>
+    <string name="error_load_history">Historie konnte nicht geladen werden</string>
+    <string name="error_save_workout">Workout konnte nicht gespeichert werden</string>
+    <string name="error_delete_workout">Workout konnte nicht gelöscht werden</string>
+    <string name="error_update_workout">Workout konnte nicht aktualisiert werden</string>
+    <string name="ok">OK</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d Satz abgeschlossen</item>
