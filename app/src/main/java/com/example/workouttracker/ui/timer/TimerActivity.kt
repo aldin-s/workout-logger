@@ -25,6 +25,7 @@ class TimerActivity : AppCompatActivity() {
     private var countdownTimer: CountDownTimer? = null
     private var timeLeftInMillis: Long = 0
     private var currentSet: Int = 1
+    private var isTimerRunning: Boolean = false
     
     // Workout data from intent
     private lateinit var exerciseName: String
@@ -54,23 +55,45 @@ class TimerActivity : AppCompatActivity() {
         
         database = WorkoutDatabase.getDatabase(this)
         
+        // Restore state or initialize fresh
+        if (savedInstanceState != null) {
+            currentSet = savedInstanceState.getInt(KEY_CURRENT_SET, 1)
+            timeLeftInMillis = savedInstanceState.getLong(KEY_TIME_LEFT, pauseTimeSeconds * 1000L)
+            isTimerRunning = savedInstanceState.getBoolean(KEY_TIMER_RUNNING, false)
+        } else {
+            currentSet = 1
+            timeLeftInMillis = pauseTimeSeconds * 1000L
+            isTimerRunning = true // Auto-start for first set
+        }
+        
         // Initialize display
         exerciseNameTextView.text = exerciseName.uppercase()
         weightTextView.text = String.format(getString(R.string.weight_format), weight)
         updateSetsDisplay()
-        timerTextView.text = String.format("%02d:%02d", pauseTimeSeconds / 60, pauseTimeSeconds % 60)
+        updateTimer()
         
-        // Start timer automatically for first set
-        startTimer()
-        setButtonDisabled()
+        // Start timer if it was running
+        if (isTimerRunning) {
+            startTimer()
+            setButtonDisabled()
+        } else {
+            setButtonEnabled()
+        }
 
         doneButton.setOnClickListener {
             markSetAsCompleted()
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(KEY_CURRENT_SET, currentSet)
+        outState.putLong(KEY_TIME_LEFT, timeLeftInMillis)
+        outState.putBoolean(KEY_TIMER_RUNNING, isTimerRunning)
+    }
+
     private fun startTimer() {
-        timeLeftInMillis = pauseTimeSeconds * 1000L
+        isTimerRunning = true
         setButtonDisabled()
         
         countdownTimer = object : CountDownTimer(timeLeftInMillis, 1000) {
@@ -80,6 +103,7 @@ class TimerActivity : AppCompatActivity() {
             }
 
             override fun onFinish() {
+                isTimerRunning = false
                 timerTextView.text = "00:00"
                 setButtonEnabled()
             }
@@ -118,6 +142,7 @@ class TimerActivity : AppCompatActivity() {
         } else {
             currentSet++
             updateSetsDisplay()
+            timeLeftInMillis = pauseTimeSeconds * 1000L // Reset timer for next set
             startTimer() // Start pause timer for next set
         }
     }
@@ -150,5 +175,11 @@ class TimerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         countdownTimer?.cancel()
+    }
+    
+    companion object {
+        private const val KEY_CURRENT_SET = "current_set"
+        private const val KEY_TIME_LEFT = "time_left"
+        private const val KEY_TIMER_RUNNING = "timer_running"
     }
 }

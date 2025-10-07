@@ -1,6 +1,6 @@
 <resources>
     <!-- App Name -->
-    <string name="app_name">Workout Tracker</string>
+    <string name="app_name">REPS</string>
     
     <!-- Main Activity -->
     <string name="main_timer_display">00:00</string>
@@ -63,5 +63,10 @@
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>
         <item quantity="other">%d sets completed</item>
+    </plurals>
+    
+    <plurals name="sets_count">
+        <item quantity="one">%d set</item>
+        <item quantity="other">%d sets</item>
     </plurals>
 </resources>

@@ -1,12 +1,33 @@
-# Workout Tracker
+# REPS
+**Simple Workout Tracker**
+
+> *Track Your Progress*
 
 ## Overview
-Workout Tracker is an Android application designed to help users manage their workouts effectively. The app includes features such as a timer, workout input screen, and functionality for tracking sets and repetitions.
+REPS is a minimalist Android workout tracker designed for serious lifters. No gamification, no social features—just pure functionality to log your sets, track your progress, and focus on what matters: getting stronger.
 
 ## Features
-- **Timer Functionality**: Users can set a countdown timer for their workouts, helping them manage their exercise intervals.
-- **Workout Input**: A dedicated screen for users to input their workout details, including weight, repetitions, and rest times.
-- **Tracking Progress**: Users can track their workout progress, including the number of sets completed and repetitions.
+- **⏱️ Rest Timer**: Smart countdown timer between sets with state preservation
+- **📊 Workout Logging**: Quick and easy input for exercises, weight, reps, and sets
+- **📈 Progress Tracking**: View your workout history grouped by date with session consolidation
+- **🌙 Dark Mode**: Clean, minimal interface with brutalist design (#121212 background)
+- **🌍 Internationalization**: Full support for German and English
+- **💾 Local Storage**: All data stored locally with Room Database—no cloud, no tracking
+
+## Design Philosophy
+REPS follows a strict minimalist approach:
+- Flat design with no elevation or shadows
+- High contrast typography hierarchy (18sp → 14sp → 12sp)
+- No unnecessary animations or distractions
+- Focus on speed and usability in the gym
+
+## Tech Stack
+- **Language**: Kotlin
+- **UI**: Material Design Components
+- **Database**: Room (SQLite)
+- **Architecture**: MVVM-style with coroutines
+- **Min SDK**: 21 (Android 5.0)
+- **Target SDK**: 34 (Android 14)
 
 ## Project Structure
 The project is organized into several packages and modules:

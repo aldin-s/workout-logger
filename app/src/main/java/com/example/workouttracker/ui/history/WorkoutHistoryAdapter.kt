@@ -67,31 +67,71 @@ class WorkoutHistoryAdapter : ListAdapter<HistoryItem, RecyclerView.ViewHolder>(
             // Exercise name in uppercase
             exerciseNameTextView.text = session.exerciseName.uppercase()
             
-            // Format as: "80.0 kg × 10 Wdh"
-            workoutDetailsTextView.text = String.format(
-                "%.1f kg × %d Wdh",
-                session.weight,
-                session.reps
-            )
-            
-            // Time range: "14:23 - 14:27" or just "14:23" if single set
-            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val startTime = timeFormat.format(session.startTime)
-            val endTime = timeFormat.format(session.endTime)
-            
-            // Use plurals for "X Sätze abgeschlossen"
+            // Format workout details with sets info
             val setsText = context.resources.getQuantityString(
-                com.example.workouttracker.R.plurals.sets_completed,
+                com.example.workouttracker.R.plurals.sets_count,
                 session.totalSets,
                 session.totalSets
             )
             
-            timestampTextView.text = if (startTime == endTime) {
-                // Single set or very quick workout
-                "$setsText · $startTime"
+            workoutDetailsTextView.text = String.format(
+                "%.1f kg × %d Wdh · %s",
+                session.weight,
+                session.reps,
+                setsText
+            )
+            
+            // Format timestamp with date based on age
+            timestampTextView.text = formatTimestamp(session.startTime, session.endTime, context)
+        }
+        
+        private fun formatTimestamp(startTime: java.util.Date, endTime: java.util.Date, context: android.content.Context): String {
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val startTimeStr = timeFormat.format(startTime)
+            val endTimeStr = timeFormat.format(endTime)
+            
+            val timeRange = if (startTimeStr == endTimeStr) {
+                startTimeStr
             } else {
-                // Multiple sets with time range
-                "$setsText · $startTime - $endTime"
+                "$startTimeStr - $endTimeStr"
+            }
+            
+            // Determine date format based on age
+            val calendar = java.util.Calendar.getInstance()
+            val today = calendar.timeInMillis
+            
+            calendar.time = startTime
+            val itemDate = calendar.timeInMillis
+            val daysDiff = ((today - itemDate) / (1000 * 60 * 60 * 24)).toInt()
+            
+            return when {
+                daysDiff == 0 -> timeRange // HEUTE: nur Zeit
+                daysDiff == 1 -> timeRange // GESTERN: nur Zeit
+                daysDiff in 2..6 -> {
+                    // DIESE WOCHE: Wochentag
+                    val weekdayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+                    "${weekdayFormat.format(startTime)} · $timeRange"
+                }
+                daysDiff in 7..13 -> {
+                    // LETZTE WOCHE: Wochentag
+                    val weekdayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+                    "${weekdayFormat.format(startTime)} · $timeRange"
+                }
+                daysDiff in 14..29 -> {
+                    // DIESEN MONAT: Tag + Monat
+                    val dateFormat = SimpleDateFormat("d. MMM", Locale.getDefault())
+                    "${dateFormat.format(startTime)} · $timeRange"
+                }
+                daysDiff in 30..59 -> {
+                    // LETZTER MONAT: Tag + Monat
+                    val dateFormat = SimpleDateFormat("d. MMM", Locale.getDefault())
+                    "${dateFormat.format(startTime)} · $timeRange"
+                }
+                else -> {
+                    // ÄLTER: Kompaktes Datum
+                    val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                    "${dateFormat.format(startTime)} · $timeRange"
+                }
             }
         }
     }
