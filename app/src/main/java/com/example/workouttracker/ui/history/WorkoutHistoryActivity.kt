@@ -2,6 +2,7 @@ package com.example.workouttracker.ui.history
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -21,6 +22,7 @@ import java.util.Locale
 class WorkoutHistoryActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var emptyStateLayout: View
     private lateinit var adapter: WorkoutHistoryAdapter
     private lateinit var database: WorkoutDatabase
 
@@ -35,6 +37,7 @@ class WorkoutHistoryActivity : AppCompatActivity() {
 
     private fun initViews() {
         recyclerView = findViewById(R.id.historyRecyclerView)
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
         database = WorkoutDatabase.getDatabase(this)
     }
 
@@ -53,7 +56,15 @@ class WorkoutHistoryActivity : AppCompatActivity() {
             try {
                 val completedSets = database.completedSetDao().getAllSets()
                 val groupedItems = HistoryGrouper.groupByDate(completedSets, this@WorkoutHistoryActivity)
-                adapter.submitList(groupedItems)
+                
+                withContext(Dispatchers.Main) {
+                    if (groupedItems.isEmpty()) {
+                        showEmptyState()
+                    } else {
+                        showHistoryList()
+                        adapter.submitList(groupedItems)
+                    }
+                }
             } catch (e: Exception) {
                 android.util.Log.e("WorkoutHistory", "Error loading history", e)
                 withContext(Dispatchers.Main) {
@@ -65,6 +76,16 @@ class WorkoutHistoryActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    
+    private fun showEmptyState() {
+        emptyStateLayout.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+    }
+    
+    private fun showHistoryList() {
+        emptyStateLayout.visibility = View.GONE
+        recyclerView.visibility = View.VISIBLE
     }
     
     private fun showActionDialog(session: WorkoutSession) {

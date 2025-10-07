@@ -134,6 +134,10 @@
     <string name="app_version">Version %s</string>
     <string name="app_copyright">© 2025</string>
     
+    <!-- Empty States -->
+    <string name="empty_history_title">No workouts yet</string>
+    <string name="empty_history_message">Start your first training</string>
+    
     <!-- Plurals -->
     <plurals name="sets_completed">
         <item quantity="one">%d set completed</item>
