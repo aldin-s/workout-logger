@@ -3,6 +3,7 @@ package com.example.workouttracker.ui.timer
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -233,8 +234,15 @@ class TimerActivity : AppCompatActivity() {
         if (!soundEnabled) return
         
         try {
-            val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            val ringtone = RingtoneManager.getRingtone(applicationContext, notificationUri)
+            // Load saved sound URI or use default
+            val uriString = prefs.getString(SettingsActivity.PREF_SOUND_URI, null)
+            val soundUri = if (uriString != null) {
+                Uri.parse(uriString)
+            } else {
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            }
+            
+            val ringtone = RingtoneManager.getRingtone(applicationContext, soundUri)
             ringtone.play()
         } catch (e: Exception) {
             android.util.Log.e("TimerActivity", "Error playing sound", e)
