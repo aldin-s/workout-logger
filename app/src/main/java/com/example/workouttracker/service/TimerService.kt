@@ -103,7 +103,11 @@ class TimerService : Service() {
         )
         
         val seconds = (timeLeft / 1000).toInt()
-        val timeText = String.format("%02d:%02d", seconds / 60, seconds % 60)
+        val timeText = if (timeLeft == 0L && !isTimerRunning) {
+            "Bereit"
+        } else {
+            String.format("%02d:%02d", seconds / 60, seconds % 60)
+        }
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(exerciseName)
@@ -162,6 +166,13 @@ class TimerService : Service() {
         currentSet = set
         timeLeftInMillis = pauseTimeSeconds * 1000L
         startTimer()
+    }
+    
+    fun prepareNextSet(set: Int) {
+        stopTimer()
+        currentSet = set
+        timeLeftInMillis = pauseTimeSeconds * 1000L
+        // Do NOT start timer - wait for user to press button
     }
     
     fun getTimeLeftInMillis(): Long = timeLeftInMillis

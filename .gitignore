@@ -52,3 +52,5 @@ local.properties
 *.zip
 *.tar.gz
 *.rar
+reps-release-key.jks
+gradle.properties
