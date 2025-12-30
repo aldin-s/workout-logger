@@ -21,8 +21,6 @@ import com.example.workouttracker.BuildConfig
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
-import com.example.workouttracker.utils.AppTheme
-import com.example.workouttracker.utils.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,8 +45,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var keepScreenOnSwitch: SwitchCompat
     private lateinit var defaultPauseTimeLayout: LinearLayout
     private lateinit var defaultPauseTimeValue: TextView
-    private lateinit var themeLayout: LinearLayout
-    private lateinit var themeValue: TextView
     private lateinit var languageLayout: LinearLayout
     private lateinit var languageValue: TextView
     private lateinit var exportHistoryButton: TextView
@@ -98,8 +94,6 @@ class SettingsActivity : AppCompatActivity() {
         keepScreenOnSwitch = findViewById(R.id.keepScreenOnSwitch)
         defaultPauseTimeLayout = findViewById(R.id.defaultPauseTimeLayout)
         defaultPauseTimeValue = findViewById(R.id.defaultPauseTimeValue)
-        themeLayout = findViewById(R.id.themeLayout)
-        themeValue = findViewById(R.id.themeValue)
         languageLayout = findViewById(R.id.languageLayout)
         languageValue = findViewById(R.id.languageValue)
         exportHistoryButton = findViewById(R.id.exportHistoryButton)
@@ -144,9 +138,6 @@ class SettingsActivity : AppCompatActivity() {
         } else {
             getString(R.string.language_english)
         }
-
-        // Theme
-        themeValue.text = ThemeManager.getCurrentThemeDisplayName(this)
 
         // App Version
         appVersionText.text = getString(R.string.app_version, BuildConfig.VERSION_NAME)
@@ -197,11 +188,6 @@ class SettingsActivity : AppCompatActivity() {
             showLanguageDialog()
         }
 
-        // Theme
-        themeLayout.setOnClickListener {
-            showThemeDialog()
-        }
-
         // Export
         exportHistoryButton.setOnClickListener {
             showExportFormatDialog()
@@ -234,30 +220,6 @@ class SettingsActivity : AppCompatActivity() {
                 prefs.edit().putInt(PREF_VIBRATION_DURATION, values[which]).apply()
                 vibrationDurationValue.text = options[which]
                 dialog.dismiss()
-            }
-            .setNegativeButton(R.string.action_cancel, null)
-            .show()
-    }
-
-    private fun showThemeDialog() {
-        val options = arrayOf(
-            getString(R.string.theme_light),
-            getString(R.string.theme_dark),
-            getString(R.string.theme_auto)
-        )
-        val themes = arrayOf(AppTheme.LIGHT, AppTheme.DARK, AppTheme.AUTO)
-        val currentTheme = ThemeManager.getCurrentTheme(this)
-        val selected = themes.indexOf(currentTheme)
-
-        AlertDialog.Builder(this)
-            .setTitle(R.string.theme_title)
-            .setSingleChoiceItems(options, selected) { dialog, which ->
-                ThemeManager.applyTheme(this, themes[which])
-                themeValue.text = options[which]
-                dialog.dismiss()
-                
-                // Recreate activity to apply theme
-                recreate()
             }
             .setNegativeButton(R.string.action_cancel, null)
             .show()
