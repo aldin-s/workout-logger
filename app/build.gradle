@@ -20,7 +20,7 @@ android {
         release {
             storeFile file('../reps-release-key.jks')
             storePassword System.getenv("REPS_KEYSTORE_PASSWORD") ?: project.findProperty("REPS_KEYSTORE_PASSWORD")
-            keyAlias 'reps-key'
+            keyAlias 'as-studio-berlin'
             keyPassword System.getenv("REPS_KEY_PASSWORD") ?: project.findProperty("REPS_KEY_PASSWORD")
         }
     }
