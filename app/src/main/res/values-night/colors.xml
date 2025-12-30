@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors (OLED-optimized) -->
+    
+    <!-- Primary Colors -->
+    <color name="primary">#64B5F6</color> <!-- Lighter blue for dark backgrounds -->
+    <color name="primary_dark">#1976D2</color>
+    <color name="primary_light">#90CAF9</color>
+    <color name="accent">#03DAC6</color> <!-- Teal accent -->
+    
+    <!-- Backgrounds (True Black for OLED) -->
+    <color name="background">#000000</color> <!-- True black saves battery -->
+    <color name="surface">#121212</color> <!-- Slightly elevated -->
+    <color name="surface_elevated">#1E1E1E</color> <!-- Cards, dialogs -->
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_tertiary">#808080</color>
+    
+    <!-- Functional Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="success_light">#1B5E20</color> <!-- Darker for dark mode -->
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    
+    <!-- UI Elements -->
+    <color name="divider">#2C2C2C</color>
+    <color name="card_background">#1C1C1C</color>
+    <color name="ripple">#40FFFFFF</color> <!-- Lighter ripple for dark -->
+    
+    <!-- Timer -->
+    <color name="timer_progress">#64B5F6</color>
+    <color name="timer_background">#1E1E1E</color>
+    
+    <!-- Bottom Navigation -->
+    <color name="bottom_nav_selected">#64B5F6</color>
+    <color name="bottom_nav_unselected">#808080</color>
+</resources>

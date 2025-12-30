@@ -89,10 +89,17 @@
     <!-- Settings -->
     <string name="settings">Einstellungen</string>
     <string name="settings_notifications">Benachrichtigungen</string>
+    <string name="settings_display">Display</string>
     <string name="settings_timer">Timer</string>
     <string name="settings_appearance">Darstellung</string>
     <string name="settings_data">Daten</string>
     <string name="settings_about">Über REPS</string>
+    
+    <!-- Theme -->
+    <string name="theme_title">Design</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_auto">Automatisch</string>
     
     <!-- Settings - Notifications -->
     <string name="vibration_on_timer_end">Vibration bei Timer-Ende</string>
@@ -101,6 +108,8 @@
     <string name="vibration_medium">Mittel (500ms)</string>
     <string name="vibration_long">Lang (1000ms)</string>
     <string name="sound_on_timer_end">Sound bei Timer-Ende</string>
+    <string name="keep_screen_on">Bildschirm aktiv halten</string>
+    <string name="keep_screen_on_description">Verhindert Standby während des Workouts</string>
     
     <!-- Settings - Timer -->
     <string name="default_pause_time">Standard-Pausenzeit</string>
@@ -143,6 +152,12 @@
     <string name="error_reps_invalid">Wiederholungen müssen größer als 0 sein</string>
     <string name="error_sets_invalid">Sätze müssen größer als 0 sein</string>
     <string name="error_pause_invalid">Pausenzeit muss größer als 0 sein</string>
+    
+    <!-- Edit Bottom Sheet -->
+    <string name="total_volume">Gesamt-Volume</string>
+    <string name="edit_original_value">Original: %s</string>
+    <string name="edit_volume_increase">↗️ +%s kg mehr als vorher</string>
+    <string name="edit_volume_decrease">↘️ -%s kg weniger als vorher</string>
     
     <!-- Plurals -->
     <plurals name="sets_completed">
