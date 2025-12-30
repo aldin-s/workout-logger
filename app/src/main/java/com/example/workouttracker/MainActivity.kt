@@ -7,12 +7,12 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.ui.history.WorkoutHistoryActivity
 import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.workout.WorkoutInputActivity
 import com.example.workouttracker.utils.TestDataGenerator
-import com.example.workouttracker.utils.ThemeManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var database: WorkoutDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Initialize theme before setting content view
-        ThemeManager.initializeTheme(this)
+        // Force dark mode
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

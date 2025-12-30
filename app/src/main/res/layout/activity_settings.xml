@@ -270,34 +270,6 @@
             android:letterSpacing="0.1"
             android:layout_marginBottom="16dp" />
 
-        <!-- Theme -->
-        <LinearLayout
-            android:id="@+id/themeLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingVertical="12dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/theme_title"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF" />
-
-            <TextView
-                android:id="@+id/themeValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/theme_auto"
-                android:textSize="14sp"
-                android:textColor="#808080"
-                android:layout_marginTop="4dp" />
-        </LinearLayout>
-
         <!-- Language -->
         <LinearLayout
             android:id="@+id/languageLayout"
