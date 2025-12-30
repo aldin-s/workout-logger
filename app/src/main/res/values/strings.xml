@@ -108,6 +108,9 @@
     <string name="vibration_medium">Mittel (500ms)</string>
     <string name="vibration_long">Lang (1000ms)</string>
     <string name="sound_on_timer_end">Sound bei Timer-Ende</string>
+    <string name="sound_selection">Sound auswählen</string>
+    <string name="sound_silent">Stumm</string>
+    <string name="sound_picker_title">Timer Sound</string>
     <string name="keep_screen_on">Bildschirm aktiv halten</string>
     <string name="keep_screen_on_description">Verhindert Standby während des Workouts</string>
     

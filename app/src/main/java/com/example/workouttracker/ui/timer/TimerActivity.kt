@@ -3,6 +3,7 @@ package com.example.workouttracker.ui.timer
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -32,6 +33,7 @@ class TimerActivity : AppCompatActivity() {
     private lateinit var weightTextView: TextView
     private lateinit var doneButton: MaterialButton
     private var countdownTimer: CountDownTimer? = null
+    private var currentRingtone: android.media.Ringtone? = null
     private var timeLeftInMillis: Long = 0
     private var currentSet: Int = 1
     private var isTimerRunning: Boolean = false
@@ -103,6 +105,12 @@ class TimerActivity : AppCompatActivity() {
         outState.putLong(KEY_TIME_LEFT, timeLeftInMillis)
         outState.putBoolean(KEY_TIMER_RUNNING, isTimerRunning)
     }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        countdownTimer?.cancel()
+        stopSound()
+    }
 
     private fun startTimer() {
         isTimerRunning = true
@@ -148,6 +156,9 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun markSetAsCompleted() {
+        // Stop any playing sound
+        stopSound()
+        
         // Log completed set to database
         logCompletedSet()
         
@@ -196,11 +207,6 @@ class TimerActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        countdownTimer?.cancel()
-    }
     
     private fun triggerVibration() {
         val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
@@ -233,11 +239,30 @@ class TimerActivity : AppCompatActivity() {
         if (!soundEnabled) return
         
         try {
-            val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            val ringtone = RingtoneManager.getRingtone(applicationContext, notificationUri)
-            ringtone.play()
+            // Stop any currently playing sound
+            stopSound()
+            
+            // Load saved sound URI or use default
+            val uriString = prefs.getString(SettingsActivity.PREF_SOUND_URI, null)
+            val soundUri = if (uriString != null) {
+                Uri.parse(uriString)
+            } else {
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            }
+            
+            currentRingtone = RingtoneManager.getRingtone(applicationContext, soundUri)
+            currentRingtone?.play()
         } catch (e: Exception) {
             android.util.Log.e("TimerActivity", "Error playing sound", e)
+        }
+    }
+    
+    private fun stopSound() {
+        try {
+            currentRingtone?.stop()
+            currentRingtone = null
+        } catch (e: Exception) {
+            android.util.Log.e("TimerActivity", "Error stopping sound", e)
         }
     }
     

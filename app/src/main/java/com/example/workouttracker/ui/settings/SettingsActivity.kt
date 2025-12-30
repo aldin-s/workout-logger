@@ -3,6 +3,7 @@ package com.example.workouttracker.ui.settings
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -41,6 +42,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var vibrationDurationLayout: LinearLayout
     private lateinit var vibrationDurationValue: TextView
     private lateinit var soundSwitch: SwitchCompat
+    private lateinit var soundSelectionLayout: LinearLayout
+    private lateinit var soundNameValue: TextView
     private lateinit var keepScreenOnSwitch: SwitchCompat
     private lateinit var defaultPauseTimeLayout: LinearLayout
     private lateinit var defaultPauseTimeValue: TextView
@@ -62,6 +65,16 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
     }
+    
+    private val soundPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val uri = result.data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            saveSoundUri(uri)
+            updateSoundName(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +93,8 @@ class SettingsActivity : AppCompatActivity() {
         vibrationDurationLayout = findViewById(R.id.vibrationDurationLayout)
         vibrationDurationValue = findViewById(R.id.vibrationDurationValue)
         soundSwitch = findViewById(R.id.soundSwitch)
+        soundSelectionLayout = findViewById(R.id.soundSelectionLayout)
+        soundNameValue = findViewById(R.id.soundNameValue)
         keepScreenOnSwitch = findViewById(R.id.keepScreenOnSwitch)
         defaultPauseTimeLayout = findViewById(R.id.defaultPauseTimeLayout)
         defaultPauseTimeValue = findViewById(R.id.defaultPauseTimeValue)
@@ -107,9 +122,18 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         // Sound
-        soundSwitch.isChecked = prefs.getBoolean(PREF_SOUND_ENABLED, false)
-
-        // Default Pause Time
+        val soundEnabled = prefs.getBoolean(PREF_SOUND_ENABLED, false)
+        soundSwitch.isChecked = soundEnabled
+        soundSelectionLayout.visibility = if (soundEnabled) View.VISIBLE else View.GONE
+        
+        // Load saved sound name
+        val soundUriString = prefs.getString(PREF_SOUND_URI, null)
+        val soundUri = if (soundUriString != null) Uri.parse(soundUriString) else null
+        updateSoundName(soundUri)
+        
+        // Keep Screen On
+        val keepScreenOnEnabled = prefs.getBoolean(PREF_KEEP_SCREEN_ON, false)
+        keepScreenOnSwitch.isChecked = keepScreenOnEnabled
         val pauseTime = prefs.getInt(PREF_DEFAULT_PAUSE_TIME, 120)
         defaultPauseTimeValue.text = getString(R.string.pause_time_seconds, pauseTime)
 
@@ -151,6 +175,12 @@ class SettingsActivity : AppCompatActivity() {
 
         soundSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(PREF_SOUND_ENABLED, isChecked).apply()
+            soundSelectionLayout.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+        
+        // Sound Selection
+        soundSelectionLayout.setOnClickListener {
+            openSystemSoundPicker()
         }
         
         keepScreenOnSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -474,12 +504,51 @@ class SettingsActivity : AppCompatActivity() {
     private fun getCurrentDate(): String {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
     }
+    
+    private fun openSystemSoundPicker() {
+        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.sound_picker_title))
+            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, getCurrentSoundUri())
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true)
+        }
+        soundPickerLauncher.launch(intent)
+    }
+    
+    private fun getCurrentSoundUri(): Uri? {
+        val uriString = prefs.getString(PREF_SOUND_URI, null)
+        return if (uriString != null) {
+            Uri.parse(uriString)
+        } else {
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        }
+    }
+    
+    private fun saveSoundUri(uri: Uri?) {
+        prefs.edit().putString(PREF_SOUND_URI, uri?.toString()).apply()
+    }
+    
+    private fun updateSoundName(uri: Uri?) {
+        val name = if (uri == null) {
+            getString(R.string.sound_silent)
+        } else {
+            try {
+                val ringtone = RingtoneManager.getRingtone(this, uri)
+                ringtone.getTitle(this)
+            } catch (e: Exception) {
+                getString(R.string.sound_silent)
+            }
+        }
+        soundNameValue.text = name
+    }
 
     companion object {
         const val PREFS_NAME = "reps_settings"
         const val PREF_VIBRATION_ENABLED = "vibration_enabled"
         const val PREF_VIBRATION_DURATION = "vibration_duration"
         const val PREF_SOUND_ENABLED = "sound_enabled"
+        const val PREF_SOUND_URI = "sound_uri"
         const val PREF_KEEP_SCREEN_ON = "keep_screen_on"
         const val PREF_DEFAULT_PAUSE_TIME = "default_pause_time"
         const val PREF_LANGUAGE = "language"
