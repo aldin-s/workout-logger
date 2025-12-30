@@ -9,6 +9,7 @@ import android.os.CountDownTimer
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -47,6 +48,9 @@ class TimerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_timer)
+        
+        // Apply keep screen on setting
+        applyKeepScreenOnSetting()
 
         timerTextView = findViewById(R.id.timerTextView)
         setsTextView = findViewById(R.id.setsTextView)
@@ -234,6 +238,17 @@ class TimerActivity : AppCompatActivity() {
             ringtone.play()
         } catch (e: Exception) {
             android.util.Log.e("TimerActivity", "Error playing sound", e)
+        }
+    }
+    
+    private fun applyKeepScreenOnSetting() {
+        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val keepScreenOn = prefs.getBoolean(SettingsActivity.PREF_KEEP_SCREEN_ON, false)
+        
+        if (keepScreenOn) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
     

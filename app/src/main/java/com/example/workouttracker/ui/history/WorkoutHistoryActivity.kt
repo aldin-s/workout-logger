@@ -107,36 +107,10 @@ class WorkoutHistoryActivity : AppCompatActivity() {
     }
     
     private fun showEditDialog(session: WorkoutSession) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_workout, null)
-        
-        val weightInput = dialogView.findViewById<EditText>(R.id.editWeight)
-        val repsInput = dialogView.findViewById<EditText>(R.id.editReps)
-        val infoText = dialogView.findViewById<TextView>(R.id.infoText)
-        
-        // Pre-fill with current values
-        weightInput.setText(session.weight.toString())
-        repsInput.setText(session.reps.toString())
-        
-        // Info (read-only)
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        infoText.text = "${session.exerciseName.uppercase()}\n" +
-                "${session.totalSets} ${getString(R.string.sets_label)} · ${timeFormat.format(session.startTime)}"
-        
-        AlertDialog.Builder(this)
-            .setTitle(R.string.edit_workout)
-            .setView(dialogView)
-            .setPositiveButton(R.string.save) { _, _ ->
-                val newWeight = weightInput.text.toString().toDoubleOrNull()
-                val newReps = repsInput.text.toString().toIntOrNull()
-                
-                if (newWeight != null && newReps != null && newWeight > 0 && newReps > 0) {
-                    updateSession(session, newWeight, newReps)
-                } else {
-                    Toast.makeText(this, R.string.error_invalid_input, Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton(R.string.action_cancel, null)
-            .show()
+        val bottomSheet = EditWorkoutBottomSheet(session) { weight, reps, sets ->
+            updateSession(session, weight, reps, sets)
+        }
+        bottomSheet.show(supportFragmentManager, EditWorkoutBottomSheet.TAG)
     }
     
     private fun showDeleteConfirmation(session: WorkoutSession) {
@@ -151,18 +125,64 @@ class WorkoutHistoryActivity : AppCompatActivity() {
             .show()
     }
     
-    private fun updateSession(session: WorkoutSession, newWeight: Double, newReps: Int) {
+    private fun updateSession(session: WorkoutSession, newWeight: Double, newReps: Int, newSets: Int) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Update all sets in the session
-                session.sets.forEach { set ->
-                    database.completedSetDao().update(
-                        set.copy(
-                            weight = newWeight,
-                            completedReps = newReps,
-                            plannedReps = newReps
-                        )
-                    )
+                val currentSetCount = session.sets.size
+                
+                when {
+                    newSets == currentSetCount -> {
+                        // Same number of sets: just update existing ones
+                        session.sets.forEach { set ->
+                            database.completedSetDao().update(
+                                set.copy(
+                                    weight = newWeight,
+                                    completedReps = newReps,
+                                    plannedReps = newReps
+                                )
+                            )
+                        }
+                    }
+                    newSets < currentSetCount -> {
+                        // Fewer sets: update first N, delete rest
+                        session.sets.take(newSets).forEach { set ->
+                            database.completedSetDao().update(
+                                set.copy(
+                                    weight = newWeight,
+                                    completedReps = newReps,
+                                    plannedReps = newReps
+                                )
+                            )
+                        }
+                        session.sets.drop(newSets).forEach { set ->
+                            database.completedSetDao().delete(set)
+                        }
+                    }
+                    else -> {
+                        // More sets: update existing, create new ones
+                        session.sets.forEach { set ->
+                            database.completedSetDao().update(
+                                set.copy(
+                                    weight = newWeight,
+                                    completedReps = newReps,
+                                    plannedReps = newReps
+                                )
+                            )
+                        }
+                        // Create additional sets
+                        val templateSet = session.sets.first()
+                        repeat(newSets - currentSetCount) { index ->
+                            database.completedSetDao().insert(
+                                templateSet.copy(
+                                    id = 0, // Auto-generate new ID
+                                    setNumber = currentSetCount + index + 1,
+                                    weight = newWeight,
+                                    completedReps = newReps,
+                                    plannedReps = newReps
+                                )
+                            )
+                        }
+                    }
                 }
                 
                 withContext(Dispatchers.Main) {

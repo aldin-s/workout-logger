@@ -12,6 +12,7 @@ import com.example.workouttracker.ui.history.WorkoutHistoryActivity
 import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.workout.WorkoutInputActivity
 import com.example.workouttracker.utils.TestDataGenerator
+import com.example.workouttracker.utils.ThemeManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +24,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var database: WorkoutDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Initialize theme before setting content view
+        ThemeManager.initializeTheme(this)
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
