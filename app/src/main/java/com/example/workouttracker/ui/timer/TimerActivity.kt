@@ -1,15 +1,12 @@
 package com.example.workouttracker.ui.timer
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.media.RingtoneManager
-import android.net.Uri
+import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.os.IBinder
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
+import com.example.workouttracker.service.TimerService
 import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.tracking.TrackingActivity
 import com.google.android.material.button.MaterialButton
@@ -25,18 +23,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class TimerActivity : AppCompatActivity() {
+class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
 
     private lateinit var timerTextView: TextView
     private lateinit var setsTextView: TextView
     private lateinit var exerciseNameTextView: TextView
     private lateinit var weightTextView: TextView
     private lateinit var doneButton: MaterialButton
-    private var countdownTimer: CountDownTimer? = null
-    private var currentRingtone: android.media.Ringtone? = null
-    private var timeLeftInMillis: Long = 0
+    
+    private var timerService: TimerService? = null
+    private var serviceBound = false
+    
     private var currentSet: Int = 1
-    private var isTimerRunning: Boolean = false
     
     // Workout data from intent
     private lateinit var exerciseName: String
@@ -46,6 +44,31 @@ class TimerActivity : AppCompatActivity() {
     private var totalSets: Int = 0
     
     private lateinit var database: WorkoutDatabase
+    
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as TimerService.TimerBinder
+            timerService = binder.getService()
+            timerService?.setTimerUpdateListener(this@TimerActivity)
+            serviceBound = true
+            
+            // Update UI with current timer state
+            timerService?.let { service ->
+                updateTimer(service.getTimeLeftInMillis())
+                if (service.isRunning()) {
+                    setButtonDisabled()
+                } else {
+                    setButtonEnabled()
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            timerService?.setTimerUpdateListener(null)
+            timerService = null
+            serviceBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,68 +95,80 @@ class TimerActivity : AppCompatActivity() {
         // Restore state or initialize fresh
         if (savedInstanceState != null) {
             currentSet = savedInstanceState.getInt(KEY_CURRENT_SET, 1)
-            timeLeftInMillis = savedInstanceState.getLong(KEY_TIME_LEFT, pauseTimeSeconds * 1000L)
-            isTimerRunning = savedInstanceState.getBoolean(KEY_TIMER_RUNNING, false)
         } else {
             currentSet = 1
-            timeLeftInMillis = pauseTimeSeconds * 1000L
-            isTimerRunning = true // Auto-start for first set
         }
         
         // Initialize display
         exerciseNameTextView.text = exerciseName.uppercase()
         weightTextView.text = String.format(getString(R.string.weight_format), weight)
         updateSetsDisplay()
-        updateTimer()
         
-        // Start timer if it was running
-        if (isTimerRunning) {
-            startTimer()
-            setButtonDisabled()
-        } else {
-            setButtonEnabled()
-        }
+        // Start and bind to service
+        startTimerService()
+        bindTimerService()
 
         doneButton.setOnClickListener {
             markSetAsCompleted()
         }
     }
+    
+    private fun startTimerService() {
+        val serviceIntent = Intent(this, TimerService::class.java).apply {
+            action = TimerService.ACTION_START_TIMER
+            putExtra(TimerService.EXTRA_PAUSE_TIME, pauseTimeSeconds)
+            putExtra(TimerService.EXTRA_CURRENT_SET, currentSet)
+            putExtra(TimerService.EXTRA_TOTAL_SETS, totalSets)
+            putExtra(TimerService.EXTRA_EXERCISE_NAME, exerciseName)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+    }
+    
+    private fun bindTimerService() {
+        val bindIntent = Intent(this, TimerService::class.java)
+        bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(KEY_CURRENT_SET, currentSet)
-        outState.putLong(KEY_TIME_LEFT, timeLeftInMillis)
-        outState.putBoolean(KEY_TIMER_RUNNING, isTimerRunning)
     }
     
     override fun onDestroy() {
         super.onDestroy()
-        countdownTimer?.cancel()
-        stopSound()
-    }
-
-    private fun startTimer() {
-        isTimerRunning = true
-        setButtonDisabled()
+        if (serviceBound) {
+            timerService?.setTimerUpdateListener(null)
+            unbindService(serviceConnection)
+            serviceBound = false
+        }
         
-        countdownTimer = object : CountDownTimer(timeLeftInMillis, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                timeLeftInMillis = millisUntilFinished
-                updateTimer()
-            }
-
-            override fun onFinish() {
-                isTimerRunning = false
-                timerTextView.text = "00:00"
-                setButtonEnabled()
-                triggerVibration()
-                triggerSound()
-            }
-        }.start()
+        // Stop service when activity is destroyed
+        val serviceIntent = Intent(this, TimerService::class.java).apply {
+            action = TimerService.ACTION_STOP_TIMER
+        }
+        startService(serviceIntent)
+    }
+    
+    override fun onTimerTick(timeLeftInMillis: Long) {
+        runOnUiThread {
+            updateTimer(timeLeftInMillis)
+        }
+    }
+    
+    override fun onTimerFinish() {
+        runOnUiThread {
+            timerTextView.text = "00:00"
+            setButtonEnabled()
+        }
     }
 
-    private fun updateTimer() {
-        val seconds = (timeLeftInMillis / 1000).toInt()
+    private fun updateTimer(timeLeft: Long) {
+        val seconds = (timeLeft / 1000).toInt()
         timerTextView.text = String.format("%02d:%02d", seconds / 60, seconds % 60)
     }
 
@@ -156,8 +191,8 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun markSetAsCompleted() {
-        // Stop any playing sound
-        stopSound()
+        // Stop any playing sound from service
+        timerService?.stopSound()
         
         // Log completed set to database
         logCompletedSet()
@@ -167,8 +202,9 @@ class TimerActivity : AppCompatActivity() {
         } else {
             currentSet++
             updateSetsDisplay()
-            timeLeftInMillis = pauseTimeSeconds * 1000L // Reset timer for next set
-            startTimer() // Start pause timer for next set
+            // Start new timer for next set via service
+            timerService?.resetTimer(pauseTimeSeconds, currentSet)
+            setButtonDisabled()
         }
     }
 
@@ -199,71 +235,12 @@ class TimerActivity : AppCompatActivity() {
     }
 
     private fun finishWorkout() {
-        countdownTimer?.cancel()
         val intent = Intent(this, TrackingActivity::class.java)
         intent.putExtra("SETS_COMPLETED", currentSet)
         intent.putExtra("EXERCISE_NAME", exerciseName)
         intent.putExtra("WEIGHT", weight)
         startActivity(intent)
         finish()
-    }
-    
-    private fun triggerVibration() {
-        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val vibrationEnabled = prefs.getBoolean(SettingsActivity.PREF_VIBRATION_ENABLED, true)
-        
-        if (!vibrationEnabled) return
-        
-        val duration = prefs.getInt(SettingsActivity.PREF_VIBRATION_DURATION, 500).toLong()
-        
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(duration)
-        }
-    }
-    
-    private fun triggerSound() {
-        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val soundEnabled = prefs.getBoolean(SettingsActivity.PREF_SOUND_ENABLED, false)
-        
-        if (!soundEnabled) return
-        
-        try {
-            // Stop any currently playing sound
-            stopSound()
-            
-            // Load saved sound URI or use default
-            val uriString = prefs.getString(SettingsActivity.PREF_SOUND_URI, null)
-            val soundUri = if (uriString != null) {
-                Uri.parse(uriString)
-            } else {
-                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            }
-            
-            currentRingtone = RingtoneManager.getRingtone(applicationContext, soundUri)
-            currentRingtone?.play()
-        } catch (e: Exception) {
-            android.util.Log.e("TimerActivity", "Error playing sound", e)
-        }
-    }
-    
-    private fun stopSound() {
-        try {
-            currentRingtone?.stop()
-            currentRingtone = null
-        } catch (e: Exception) {
-            android.util.Log.e("TimerActivity", "Error stopping sound", e)
-        }
     }
     
     private fun applyKeepScreenOnSetting() {
@@ -279,7 +256,5 @@ class TimerActivity : AppCompatActivity() {
     
     companion object {
         private const val KEY_CURRENT_SET = "current_set"
-        private const val KEY_TIME_LEFT = "time_left"
-        private const val KEY_TIMER_RUNNING = "timer_running"
     }
 }

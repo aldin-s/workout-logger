@@ -29,6 +29,11 @@
     <string name="pause_running">REST PERIOD…</string>
     <string name="set_done">SET DONE</string>
     
+    <!-- Timer Notification -->
+    <string name="timer_notification_channel_name">Workout Timer</string>
+    <string name="timer_notification_channel_description">Shows the active workout timer</string>
+    <string name="timer_notification_text">%1$s - Set %2$d/%3$d</string>
+    
     <!-- Tracking/Completion Activity -->
     <string name="workout_completed">WORKOUT COMPLETED</string>
     <string name="back_to_main">BACK TO MAIN MENU</string>

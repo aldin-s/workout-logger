@@ -29,6 +29,11 @@
     <string name="pause_running">PAUSE LÄUFT…</string>
     <string name="set_done">SATZ FERTIG</string>
     
+    <!-- Timer Notification -->
+    <string name="timer_notification_channel_name">Workout Timer</string>
+    <string name="timer_notification_channel_description">Zeigt den aktiven Workout-Timer</string>
+    <string name="timer_notification_text">%1$s - Satz %2$d/%3$d</string>
+    
     <!-- Tracking/Completion Activity -->
     <string name="workout_completed">WORKOUT ABGESCHLOSSEN</string>
     <string name="back_to_main">ZURÜCK ZUM HAUPTMENÜ</string>
