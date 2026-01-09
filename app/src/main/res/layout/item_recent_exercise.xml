@@ -40,7 +40,7 @@
             android:layout_margin="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#606060"
+            app:tint="#606060"
             android:contentDescription="@string/delete_exercise"
             android:visibility="gone" />
 

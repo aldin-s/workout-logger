@@ -1,6 +1,7 @@
 package com.asstudio.berlin.reps
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
@@ -8,11 +9,15 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import com.asstudio.berlin.reps.data.ExerciseCache
 import com.asstudio.berlin.reps.data.database.WorkoutDatabase
 import com.asstudio.berlin.reps.ui.history.WorkoutHistoryActivity
 import com.asstudio.berlin.reps.ui.settings.SettingsActivity
 import com.asstudio.berlin.reps.ui.workout.WorkoutInputActivity
 import com.asstudio.berlin.reps.utils.TestDataGenerator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,6 +41,25 @@ class MainActivity : AppCompatActivity() {
         initializeDisplays()
         setupClickListeners()
         setupDebugMenu()
+        
+        // PRELOAD exercises in background
+        preloadExercises()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh cache when returning from other activities
+        preloadExercises()
+    }
+    
+    private fun preloadExercises() {
+        if (ExerciseCache.isLoading) return
+        
+        ExerciseCache.startLoading()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val exercises = database.customExerciseDao().getAllVisibleExercisesOnce()
+            ExerciseCache.setExercises(exercises)
+        }
     }
 
     private fun initViews() {
@@ -55,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         startWorkoutButton.setOnClickListener {
             val intent = Intent(this, WorkoutInputActivity::class.java)
             startActivity(intent)
+            @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
         }
 

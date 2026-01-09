@@ -21,7 +21,12 @@ class ExerciseItemTouchHelper(
         viewHolder: RecyclerView.ViewHolder,
         target: RecyclerView.ViewHolder
     ): Boolean {
-        return adapter.onItemMove(viewHolder.adapterPosition, target.adapterPosition)
+        val fromPos = viewHolder.bindingAdapterPosition
+        val toPos = target.bindingAdapterPosition
+        if (fromPos == RecyclerView.NO_POSITION || toPos == RecyclerView.NO_POSITION) {
+            return false
+        }
+        return adapter.onItemMove(fromPos, toPos)
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.asstudio.berlin.reps.R
+import com.asstudio.berlin.reps.data.ExerciseCache
 import com.asstudio.berlin.reps.data.database.WorkoutDatabase
 import com.asstudio.berlin.reps.data.model.CustomExercise
 import com.asstudio.berlin.reps.ui.timer.TimerActivity
@@ -135,20 +136,30 @@ class WorkoutInputActivity : AppCompatActivity() {
     private fun saveExerciseOrder(exercises: List<CustomExercise>) {
         lifecycleScope.launch {
             database.customExerciseDao().updateAllSortOrders(exercises)
+            // Update cache after reorder
+            ExerciseCache.setExercises(exercises)
         }
     }
     
     private fun loadExercises() {
-        lifecycleScope.launch(Dispatchers.Main.immediate) {
-            // INSTANT: Load once immediately
-            val exercises = database.customExerciseDao().getAllVisibleExercisesOnce()
-            allExercisesAdapter.submitList(exercises)
+        // INSTANT: Use cached data if available (preloaded in MainActivity)
+        val cachedExercises = ExerciseCache.exercises
+        if (cachedExercises != null) {
+            allExercisesAdapter.submitList(cachedExercises)
+        } else {
+            // Fallback: Load directly if cache is empty
+            lifecycleScope.launch(Dispatchers.Main.immediate) {
+                val exercises = database.customExerciseDao().getAllVisibleExercisesOnce()
+                allExercisesAdapter.submitList(exercises)
+            }
         }
         
         // THEN: Flow for live updates
         lifecycleScope.launch {
             database.customExerciseDao().getAllVisibleExercises().collect { exercises ->
                 allExercisesAdapter.submitList(exercises)
+                // Keep cache in sync
+                ExerciseCache.setExercises(exercises)
             }
         }
     }
@@ -314,6 +325,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             }
             
             startActivity(intent)
+            @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
             finish()
         }
