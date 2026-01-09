@@ -2,18 +2,45 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.google.devtools.ksp'
 
+// Automatische Versionierung basierend auf Git-Commits
+def getVersionCode = {
+    try {
+        def code = 'git rev-list --count HEAD'.execute().text.trim()
+        return code.toInteger()
+    } catch (Exception e) {
+        return 1
+    }
+}
+
+def getVersionName = {
+    try {
+        // Versucht erst Git-Tag zu finden, sonst generiert aus Commits
+        def tag = 'git describe --tags --abbrev=0'.execute().text.trim()
+        if (tag) return tag.replaceFirst("^v", "")
+        return "1.0.${getVersionCode()}"
+    } catch (Exception e) {
+        return "1.0.${getVersionCode()}"
+    }
+}
+
 android {
-    namespace 'com.example.workouttracker'
-    compileSdk 34
+    namespace 'com.asstudio.berlin.reps'
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.example.workouttracker"
+        applicationId "com.asstudio.berlin.reps"
         minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 36
+        versionCode getVersionCode()
+        versionName getVersionName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    
+    testOptions {
+        // Workaround für UTP (Unified Test Platform) Fehler
+        // Verwendet den alten AndroidJUnitRunner statt UTP
+        animationsDisabled = true
     }
 
     signingConfigs {
@@ -27,7 +54,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -48,15 +76,15 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
-    implementation 'androidx.activity:activity-ktx:1.3.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+    implementation 'androidx.activity:activity-ktx:1.9.3'
     
     // Material Design
-    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'com.google.android.material:material:1.12.0'
     
     // Room database
     implementation 'androidx.room:room-runtime:2.6.1'
@@ -64,15 +92,28 @@ dependencies {
     ksp 'androidx.room:room-compiler:2.6.1'
     
     // RecyclerView
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    // cardview entfernt - ist in Material enthalten
     
     // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0'
     
-    // Testing
+    // Testing - Unit Tests
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0'
+    testImplementation 'androidx.room:room-testing:2.6.1'
+    
+    // Testing - Instrumented Tests
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.6.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.6.1'
+    androidTestImplementation 'androidx.work:work-testing:2.9.0'
+    androidTestImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0'
 }
