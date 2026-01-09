@@ -15,6 +15,10 @@
     <string name="exercise_rowing">Rudern</string>
     <string name="exercise_squat">Kniebeuge</string>
     <string name="custom_exercise">+ Eigene Übung</string>
+    <string name="recently_used_header">ZULETZT VERWENDET</string>
+    <string name="exercises_header">ÜBUNGEN</string>
+    <string name="new_exercise_button">Neue Übung erstellen</string>
+    <string name="delete_exercise">Übung löschen</string>
     <string name="selected_exercise_label">Ausgewählte Übung:</string>
     <string name="weight_label">Gewicht (kg)</string>
     <string name="reps_label">Wiederholungen</string>

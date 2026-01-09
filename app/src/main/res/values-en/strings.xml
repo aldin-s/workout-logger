@@ -15,6 +15,10 @@
     <string name="exercise_rowing">Rowing</string>
     <string name="exercise_squat">Squat</string>
     <string name="custom_exercise">+ Custom Exercise</string>
+    <string name="recently_used_header">RECENTLY USED</string>
+    <string name="exercises_header">EXERCISES</string>
+    <string name="new_exercise_button">Create New Exercise</string>
+    <string name="delete_exercise">Delete exercise</string>
     <string name="selected_exercise_label">Selected Exercise:</string>
     <string name="weight_label">Weight (kg)</string>
     <string name="reps_label">Repetitions</string>

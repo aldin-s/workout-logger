@@ -4,34 +4,52 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.asstudio.berlin.reps.R
+import com.asstudio.berlin.reps.data.database.WorkoutDatabase
+import com.asstudio.berlin.reps.data.model.CustomExercise
 import com.asstudio.berlin.reps.ui.timer.TimerActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.launch
 
 class WorkoutInputActivity : AppCompatActivity() {
     
-    // Exercise selection cards
+    private lateinit var database: WorkoutDatabase
+    
     private lateinit var cardKreuzheben: MaterialCardView
     private lateinit var cardBankdruecken: MaterialCardView
     private lateinit var cardRudern: MaterialCardView
     private lateinit var cardKniebeuge: MaterialCardView
-    private lateinit var cardCustomExercise: MaterialCardView
+    private lateinit var newExerciseButton: MaterialButton
     
-    // Selected exercise display
+    private lateinit var deleteKreuzheben: ImageButton
+    private lateinit var deleteBankdruecken: ImageButton
+    private lateinit var deleteRudern: ImageButton
+    private lateinit var deleteKniebeuge: ImageButton
+    
+    private lateinit var recentlyUsedHeader: TextView
+    private lateinit var recentlyUsedRecyclerView: RecyclerView
+    private lateinit var customExercisesRecyclerView: RecyclerView
+    private lateinit var recentAdapter: RecentExerciseAdapter
+    private lateinit var customAdapter: CustomExerciseAdapter
+    
     private lateinit var selectedExerciseLabel: TextView
     private lateinit var selectedExerciseText: TextView
     
-    // Custom exercise input
     private lateinit var customExerciseLayout: TextInputLayout
     private lateinit var customExerciseEditText: TextInputEditText
     
-    // Workout parameters
     private lateinit var weightEditText: TextInputEditText
     private lateinit var repsEditText: TextInputEditText
     private lateinit var pauseTimeEditText: TextInputEditText
@@ -45,34 +63,156 @@ class WorkoutInputActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_workout_input)
 
+        database = WorkoutDatabase.getDatabase(this)
+        
         initViews()
+        setupRecyclerViews()
+        initializeStandardExercises()
         setupExerciseCards()
         setupClickListeners()
         setDefaultValues()
+        loadExercises()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Reload exercises when returning from timer
+        loadExercises()
+    }
+    
+    private fun initializeStandardExercises() {
+        lifecycleScope.launch {
+            val standardExercises = listOf(
+                getString(R.string.exercise_deadlift),
+                getString(R.string.exercise_bench_press),
+                getString(R.string.exercise_rowing),
+                getString(R.string.exercise_squat)
+            )
+            
+            standardExercises.forEach { name ->
+                val existing = database.customExerciseDao().getExerciseByName(name)
+                if (existing == null) {
+                    database.customExerciseDao().insertExercise(
+                        CustomExercise(
+                            name = name,
+                            createdAt = 0,
+                            lastUsed = 0
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun initViews() {
-        // Exercise cards
         cardKreuzheben = findViewById(R.id.cardKreuzheben)
         cardBankdruecken = findViewById(R.id.cardBankdruecken)
         cardRudern = findViewById(R.id.cardRudern)
         cardKniebeuge = findViewById(R.id.cardKniebeuge)
-        cardCustomExercise = findViewById(R.id.cardCustomExercise)
+        newExerciseButton = findViewById(R.id.newExerciseButton)
         
-        // Selected exercise display
+        deleteKreuzheben = findViewById(R.id.deleteKreuzheben)
+        deleteBankdruecken = findViewById(R.id.deleteBankdruecken)
+        deleteRudern = findViewById(R.id.deleteRudern)
+        deleteKniebeuge = findViewById(R.id.deleteKniebeuge)
+        
+        recentlyUsedHeader = findViewById(R.id.recentlyUsedHeader)
+        recentlyUsedRecyclerView = findViewById(R.id.recentlyUsedRecyclerView)
+        customExercisesRecyclerView = findViewById(R.id.customExercisesRecyclerView)
+        
         selectedExerciseLabel = findViewById(R.id.selectedExerciseLabel)
         selectedExerciseText = findViewById(R.id.selectedExerciseText)
         
-        // Custom exercise input
         customExerciseLayout = findViewById(R.id.customExerciseLayout)
         customExerciseEditText = findViewById(R.id.customExerciseEditText)
         
-        // Workout parameters
         weightEditText = findViewById(R.id.weightEditText)
         repsEditText = findViewById(R.id.repsEditText)
         pauseTimeEditText = findViewById(R.id.pauseTimeEditText)
         setsEditText = findViewById(R.id.setsEditText)
         startButton = findViewById(R.id.startButton)
+        
+        deleteKreuzheben.setOnClickListener {
+            deleteCustomExercise(getString(R.string.exercise_deadlift))
+        }
+        deleteBankdruecken.setOnClickListener {
+            deleteCustomExercise(getString(R.string.exercise_bench_press))
+        }
+        deleteRudern.setOnClickListener {
+            deleteCustomExercise(getString(R.string.exercise_rowing))
+        }
+        deleteKniebeuge.setOnClickListener {
+            deleteCustomExercise(getString(R.string.exercise_squat))
+        }
+    }
+    
+    private fun setupRecyclerViews() {
+        recentAdapter = RecentExerciseAdapter(
+            onExerciseClick = { exerciseName ->
+                selectExercise(exerciseName, false)
+            },
+            onDeleteClick = { exerciseName ->
+                deleteCustomExercise(exerciseName)
+            }
+        )
+        
+        recentlyUsedRecyclerView.apply {
+            adapter = recentAdapter
+            layoutManager = LinearLayoutManager(
+                this@WorkoutInputActivity,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+        }
+        
+        customAdapter = CustomExerciseAdapter(
+            onExerciseClick = { exerciseName ->
+                selectExercise(exerciseName, true)
+            },
+            onDeleteClick = { exercise ->
+                deleteCustomExercise(exercise.name)
+            }
+        )
+        
+        customExercisesRecyclerView.apply {
+            adapter = customAdapter
+            layoutManager = GridLayoutManager(this@WorkoutInputActivity, 2)
+        }
+    }
+    
+    private fun loadExercises() {
+        var totalVisibleExercises = 0
+        
+        lifecycleScope.launch {
+            database.customExerciseDao().getAllVisibleExercises().collect { visibleExercises ->
+                totalVisibleExercises = visibleExercises.size
+                val visibleNames = visibleExercises.map { it.name }.toSet()
+                
+                cardKreuzheben.visibility = if (visibleNames.contains(getString(R.string.exercise_deadlift))) View.VISIBLE else View.GONE
+                cardBankdruecken.visibility = if (visibleNames.contains(getString(R.string.exercise_bench_press))) View.VISIBLE else View.GONE
+                cardRudern.visibility = if (visibleNames.contains(getString(R.string.exercise_rowing))) View.VISIBLE else View.GONE
+                cardKniebeuge.visibility = if (visibleNames.contains(getString(R.string.exercise_squat))) View.VISIBLE else View.GONE
+            }
+        }
+        
+        lifecycleScope.launch {
+            database.customExerciseDao().getRecentlyUsed(10).collect { exercises ->
+                recentAdapter.submitList(exercises.map { 
+                    RecentExercise(it.name, it.createdAt != 0L)
+                })
+                
+                // Nur anzeigen wenn mehr als 8 Übungen UND mindestens eine wurde verwendet
+                val shouldShow = totalVisibleExercises > 8 && exercises.isNotEmpty()
+                recentlyUsedHeader.visibility = if (shouldShow) View.VISIBLE else View.GONE
+                recentlyUsedRecyclerView.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            }
+        }
+        
+        lifecycleScope.launch {
+            database.customExerciseDao().getAllCustomExercises().collect { exercises ->
+                customAdapter.submitList(exercises)
+            }
+        }
     }
     
     private fun setupExerciseCards() {
@@ -92,7 +232,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             selectExercise(getString(R.string.exercise_squat), false)
         }
         
-        cardCustomExercise.setOnClickListener {
+        newExerciseButton.setOnClickListener {
             selectExercise("", true)
         }
     }
@@ -101,25 +241,26 @@ class WorkoutInputActivity : AppCompatActivity() {
         selectedExercise = exercise
         isCustomExercise = custom
         
-        // Reset all card borders FIRST
         resetCardBorders()
         
-        if (custom) {
-            // Show custom input
+        if (custom && exercise.isEmpty()) {
+            // Neue Übung: Textfeld anzeigen
             customExerciseLayout.visibility = View.VISIBLE
             selectedExerciseLabel.visibility = View.GONE
             selectedExerciseText.visibility = View.GONE
-            // Highlight with white border
-            cardCustomExercise.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
-            cardCustomExercise.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
+        } else if (custom) {
+            // Bestehende Custom Exercise: Name anzeigen
+            customExerciseLayout.visibility = View.GONE
+            selectedExerciseLabel.visibility = View.VISIBLE
+            selectedExerciseText.visibility = View.VISIBLE
+            selectedExerciseText.text = exercise
         } else {
-            // Show selected exercise
+            // Standard Exercise: Name anzeigen
             customExerciseLayout.visibility = View.GONE
             selectedExerciseLabel.visibility = View.VISIBLE
             selectedExerciseText.visibility = View.VISIBLE
             selectedExerciseText.text = exercise
             
-            // Highlight selected card with white border
             when (exercise) {
                 getString(R.string.exercise_deadlift) -> {
                     cardKreuzheben.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
@@ -153,10 +294,8 @@ class WorkoutInputActivity : AppCompatActivity() {
         cardRudern.setStrokeWidth(defaultStrokeWidth)
         cardKniebeuge.setStrokeColor(defaultStrokeColor)
         cardKniebeuge.setStrokeWidth(defaultStrokeWidth)
-        cardCustomExercise.setStrokeColor(defaultStrokeColor)
-        cardCustomExercise.setStrokeWidth(defaultStrokeWidth)
     }
-
+    
     private fun setupClickListeners() {
         startButton.setOnClickListener {
             if (validateInput()) {
@@ -164,18 +303,27 @@ class WorkoutInputActivity : AppCompatActivity() {
             }
         }
     }
-
-
+    
     private fun setDefaultValues() {
-        pauseTimeEditText.setText("120") // Default 60 seconds pause
-        setsEditText.setText("5") // Default 3 sets
+        pauseTimeEditText.setText("120")
+        setsEditText.setText("5")
     }
-
+    
+    private fun deleteCustomExercise(exerciseName: String) {
+        lifecycleScope.launch {
+            database.customExerciseDao().hideExercise(exerciseName)
+            Toast.makeText(this@WorkoutInputActivity, 
+                getString(R.string.delete_exercise) + ": $exerciseName", 
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+    
     private fun validateInput(): Boolean {
-        // Get exercise name
-        val exerciseName = if (isCustomExercise) {
+        val exerciseName = if (isCustomExercise && selectedExercise.isEmpty()) {
+            // Neue Custom Exercise: Text aus Eingabefeld
             customExerciseEditText.text.toString().trim()
         } else {
+            // Standard Exercise oder bestehende Custom Exercise
             selectedExercise
         }
         
@@ -186,7 +334,7 @@ class WorkoutInputActivity : AppCompatActivity() {
 
         when {
             exerciseName.isEmpty() -> {
-                if (isCustomExercise) {
+                if (isCustomExercise && selectedExercise.isEmpty()) {
                     customExerciseEditText.error = getString(R.string.error_enter_exercise)
                 } else {
                     Toast.makeText(this, getString(R.string.error_select_exercise), Toast.LENGTH_SHORT).show()
@@ -211,7 +359,6 @@ class WorkoutInputActivity : AppCompatActivity() {
             }
         }
         
-        // Validate numeric values (only minimum checks, no maximum limits)
         val weight = weightText.toDoubleOrNull()
         val reps = repsText.toIntOrNull()
         val pauseTime = pauseTimeText.toIntOrNull()
@@ -244,9 +391,11 @@ class WorkoutInputActivity : AppCompatActivity() {
     }
 
     private fun startWorkout() {
-        val exerciseName = if (isCustomExercise) {
+        val exerciseName = if (isCustomExercise && selectedExercise.isEmpty()) {
+            // Neue Custom Exercise: Text aus Eingabefeld
             customExerciseEditText.text.toString().trim()
         } else {
+            // Standard Exercise oder bestehende Custom Exercise
             selectedExercise
         }
         
@@ -255,15 +404,35 @@ class WorkoutInputActivity : AppCompatActivity() {
         val pauseTime = pauseTimeEditText.text.toString().toIntOrNull() ?: 60
         val totalSets = setsEditText.text.toString().toIntOrNull() ?: 1
 
-        val intent = Intent(this, TimerActivity::class.java).apply {
-            putExtra("EXERCISE_NAME", exerciseName)
-            putExtra("WEIGHT", weight)
-            putExtra("REPS", reps)
-            putExtra("PAUSE_TIME", pauseTime)
-            putExtra("TOTAL_SETS", totalSets)
+        // Save exercise BEFORE starting intent
+        lifecycleScope.launch {
+            val currentTime = System.currentTimeMillis()
+            val existing = database.customExerciseDao().getExerciseByName(exerciseName)
+            
+            if (existing != null) {
+                database.customExerciseDao().updateUsage(exerciseName, currentTime)
+            } else {
+                database.customExerciseDao().insertExercise(
+                    CustomExercise(
+                        name = exerciseName,
+                        createdAt = currentTime,
+                        lastUsed = currentTime,
+                        usageCount = 1
+                    )
+                )
+            }
+            
+            // Start timer activity AFTER saving
+            val intent = Intent(this@WorkoutInputActivity, TimerActivity::class.java).apply {
+                putExtra("EXERCISE_NAME", exerciseName)
+                putExtra("WEIGHT", weight)
+                putExtra("REPS", reps)
+                putExtra("PAUSE_TIME", pauseTime)
+                putExtra("TOTAL_SETS", totalSets)
+            }
+            
+            startActivity(intent)
+            finish()
         }
-        
-        startActivity(intent)
-        finish()
     }
 }

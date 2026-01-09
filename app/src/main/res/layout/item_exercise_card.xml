@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/exerciseCard"
+    android:layout_width="match_parent"
+    android:layout_height="110dp"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#404040"
+    app:cardBackgroundColor="#1E1E1E"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/exerciseNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Exercise Name"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:paddingStart="20dp"
+            android:paddingEnd="40dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="#808080"
+            android:contentDescription="@string/delete_exercise"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</com.google.android.material.card.MaterialCardView>
