@@ -58,9 +58,16 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
             // Update UI with current timer state
             timerService?.let { service ->
                 updateTimer(service.getTimeLeftInMillis())
-                if (service.isRunning()) {
+                val isRunning = service.isRunning()
+                
+                // Button should be disabled when timer is running OR when we're waiting for first timer to start
+                if (isRunning) {
+                    setButtonDisabled()
+                } else if (currentSet == 1) {
+                    // First set: keep button disabled, timer is starting
                     setButtonDisabled()
                 } else {
+                    // Timer finished, enable button
                     setButtonEnabled()
                 }
             }
@@ -115,6 +122,9 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         exerciseNameTextView.text = exerciseName.uppercase()
         weightTextView.text = String.format(getString(R.string.weight_format), weight)
         updateSetsDisplay()
+        
+        // Disable button initially - will be enabled once service connects and timer state is known
+        setButtonDisabled()
         
         // Check notification permission and start service
         checkNotificationPermissionAndStartService()
