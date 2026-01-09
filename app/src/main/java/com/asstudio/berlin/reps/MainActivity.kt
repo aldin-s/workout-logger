@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         startWorkoutButton.setOnClickListener {
             val intent = Intent(this, WorkoutInputActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
         historyButton.setOnClickListener {

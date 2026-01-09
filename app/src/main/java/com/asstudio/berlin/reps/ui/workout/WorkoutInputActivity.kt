@@ -4,17 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.asstudio.berlin.reps.R
 import com.asstudio.berlin.reps.data.database.WorkoutDatabase
 import com.asstudio.berlin.reps.data.model.CustomExercise
@@ -27,22 +26,10 @@ class WorkoutInputActivity : AppCompatActivity() {
     
     private lateinit var database: WorkoutDatabase
     
-    private lateinit var cardKreuzheben: MaterialCardView
-    private lateinit var cardBankdruecken: MaterialCardView
-    private lateinit var cardRudern: MaterialCardView
-    private lateinit var cardKniebeuge: MaterialCardView
     private lateinit var newExerciseButton: MaterialButton
     
-    private lateinit var deleteKreuzheben: ImageButton
-    private lateinit var deleteBankdruecken: ImageButton
-    private lateinit var deleteRudern: ImageButton
-    private lateinit var deleteKniebeuge: ImageButton
-    
-    private lateinit var recentlyUsedHeader: TextView
-    private lateinit var recentlyUsedRecyclerView: RecyclerView
-    private lateinit var customExercisesRecyclerView: RecyclerView
-    private lateinit var recentAdapter: RecentExerciseAdapter
-    private lateinit var customAdapter: CustomExerciseAdapter
+    private lateinit var allExercisesRecyclerView: RecyclerView
+    private lateinit var allExercisesAdapter: DraggableExerciseAdapter
     
     private lateinit var selectedExerciseLabel: TextView
     private lateinit var selectedExerciseText: TextView
@@ -68,7 +55,6 @@ class WorkoutInputActivity : AppCompatActivity() {
         initViews()
         setupRecyclerViews()
         initializeStandardExercises()
-        setupExerciseCards()
         setupClickListeners()
         setDefaultValues()
         loadExercises()
@@ -83,20 +69,21 @@ class WorkoutInputActivity : AppCompatActivity() {
     private fun initializeStandardExercises() {
         lifecycleScope.launch {
             val standardExercises = listOf(
-                getString(R.string.exercise_deadlift),
-                getString(R.string.exercise_bench_press),
-                getString(R.string.exercise_rowing),
-                getString(R.string.exercise_squat)
+                getString(R.string.exercise_deadlift) to 1,
+                getString(R.string.exercise_bench_press) to 2,
+                getString(R.string.exercise_rowing) to 3,
+                getString(R.string.exercise_squat) to 4
             )
             
-            standardExercises.forEach { name ->
+            standardExercises.forEach { (name, order) ->
                 val existing = database.customExerciseDao().getExerciseByName(name)
                 if (existing == null) {
                     database.customExerciseDao().insertExercise(
                         CustomExercise(
                             name = name,
                             createdAt = 0,
-                            lastUsed = 0
+                            lastUsed = 0,
+                            sortOrder = order
                         )
                     )
                 }
@@ -105,20 +92,8 @@ class WorkoutInputActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        cardKreuzheben = findViewById(R.id.cardKreuzheben)
-        cardBankdruecken = findViewById(R.id.cardBankdruecken)
-        cardRudern = findViewById(R.id.cardRudern)
-        cardKniebeuge = findViewById(R.id.cardKniebeuge)
         newExerciseButton = findViewById(R.id.newExerciseButton)
-        
-        deleteKreuzheben = findViewById(R.id.deleteKreuzheben)
-        deleteBankdruecken = findViewById(R.id.deleteBankdruecken)
-        deleteRudern = findViewById(R.id.deleteRudern)
-        deleteKniebeuge = findViewById(R.id.deleteKniebeuge)
-        
-        recentlyUsedHeader = findViewById(R.id.recentlyUsedHeader)
-        recentlyUsedRecyclerView = findViewById(R.id.recentlyUsedRecyclerView)
-        customExercisesRecyclerView = findViewById(R.id.customExercisesRecyclerView)
+        allExercisesRecyclerView = findViewById(R.id.allExercisesRecyclerView)
         
         selectedExerciseLabel = findViewById(R.id.selectedExerciseLabel)
         selectedExerciseText = findViewById(R.id.selectedExerciseText)
@@ -131,109 +106,50 @@ class WorkoutInputActivity : AppCompatActivity() {
         pauseTimeEditText = findViewById(R.id.pauseTimeEditText)
         setsEditText = findViewById(R.id.setsEditText)
         startButton = findViewById(R.id.startButton)
-        
-        deleteKreuzheben.setOnClickListener {
-            deleteCustomExercise(getString(R.string.exercise_deadlift))
-        }
-        deleteBankdruecken.setOnClickListener {
-            deleteCustomExercise(getString(R.string.exercise_bench_press))
-        }
-        deleteRudern.setOnClickListener {
-            deleteCustomExercise(getString(R.string.exercise_rowing))
-        }
-        deleteKniebeuge.setOnClickListener {
-            deleteCustomExercise(getString(R.string.exercise_squat))
-        }
     }
     
     private fun setupRecyclerViews() {
-        recentAdapter = RecentExerciseAdapter(
-            onExerciseClick = { exerciseName ->
-                selectExercise(exerciseName, false)
-            },
-            onDeleteClick = { exerciseName ->
-                deleteCustomExercise(exerciseName)
-            }
-        )
-        
-        recentlyUsedRecyclerView.apply {
-            adapter = recentAdapter
-            layoutManager = LinearLayoutManager(
-                this@WorkoutInputActivity,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
-        }
-        
-        customAdapter = CustomExerciseAdapter(
-            onExerciseClick = { exerciseName ->
-                selectExercise(exerciseName, true)
+        // All exercises draggable grid
+        allExercisesAdapter = DraggableExerciseAdapter(
+            onExerciseClick = { exercise ->
+                selectExercise(exercise.name, exercise.createdAt != 0L)
             },
             onDeleteClick = { exercise ->
                 deleteCustomExercise(exercise.name)
+            },
+            onItemMoved = { updatedList ->
+                saveExerciseOrder(updatedList)
             }
         )
         
-        customExercisesRecyclerView.apply {
-            adapter = customAdapter
+        allExercisesRecyclerView.apply {
+            adapter = allExercisesAdapter
             layoutManager = GridLayoutManager(this@WorkoutInputActivity, 2)
+            
+            // Attach ItemTouchHelper for drag & drop
+            val touchHelper = ItemTouchHelper(ExerciseItemTouchHelper(allExercisesAdapter))
+            touchHelper.attachToRecyclerView(this)
+        }
+    }
+    
+    private fun saveExerciseOrder(exercises: List<CustomExercise>) {
+        lifecycleScope.launch {
+            database.customExerciseDao().updateAllSortOrders(exercises)
         }
     }
     
     private fun loadExercises() {
-        var totalVisibleExercises = 0
+        lifecycleScope.launch(Dispatchers.Main.immediate) {
+            // INSTANT: Load once immediately
+            val exercises = database.customExerciseDao().getAllVisibleExercisesOnce()
+            allExercisesAdapter.submitList(exercises)
+        }
         
+        // THEN: Flow for live updates
         lifecycleScope.launch {
-            database.customExerciseDao().getAllVisibleExercises().collect { visibleExercises ->
-                totalVisibleExercises = visibleExercises.size
-                val visibleNames = visibleExercises.map { it.name }.toSet()
-                
-                cardKreuzheben.visibility = if (visibleNames.contains(getString(R.string.exercise_deadlift))) View.VISIBLE else View.GONE
-                cardBankdruecken.visibility = if (visibleNames.contains(getString(R.string.exercise_bench_press))) View.VISIBLE else View.GONE
-                cardRudern.visibility = if (visibleNames.contains(getString(R.string.exercise_rowing))) View.VISIBLE else View.GONE
-                cardKniebeuge.visibility = if (visibleNames.contains(getString(R.string.exercise_squat))) View.VISIBLE else View.GONE
+            database.customExerciseDao().getAllVisibleExercises().collect { exercises ->
+                allExercisesAdapter.submitList(exercises)
             }
-        }
-        
-        lifecycleScope.launch {
-            database.customExerciseDao().getRecentlyUsed(10).collect { exercises ->
-                recentAdapter.submitList(exercises.map { 
-                    RecentExercise(it.name, it.createdAt != 0L)
-                })
-                
-                // Nur anzeigen wenn mehr als 8 Übungen UND mindestens eine wurde verwendet
-                val shouldShow = totalVisibleExercises > 8 && exercises.isNotEmpty()
-                recentlyUsedHeader.visibility = if (shouldShow) View.VISIBLE else View.GONE
-                recentlyUsedRecyclerView.visibility = if (shouldShow) View.VISIBLE else View.GONE
-            }
-        }
-        
-        lifecycleScope.launch {
-            database.customExerciseDao().getAllCustomExercises().collect { exercises ->
-                customAdapter.submitList(exercises)
-            }
-        }
-    }
-    
-    private fun setupExerciseCards() {
-        cardKreuzheben.setOnClickListener {
-            selectExercise(getString(R.string.exercise_deadlift), false)
-        }
-        
-        cardBankdruecken.setOnClickListener {
-            selectExercise(getString(R.string.exercise_bench_press), false)
-        }
-        
-        cardRudern.setOnClickListener {
-            selectExercise(getString(R.string.exercise_rowing), false)
-        }
-        
-        cardKniebeuge.setOnClickListener {
-            selectExercise(getString(R.string.exercise_squat), false)
-        }
-        
-        newExerciseButton.setOnClickListener {
-            selectExercise("", true)
         }
     }
     
@@ -241,62 +157,25 @@ class WorkoutInputActivity : AppCompatActivity() {
         selectedExercise = exercise
         isCustomExercise = custom
         
-        resetCardBorders()
-        
         if (custom && exercise.isEmpty()) {
             // Neue Übung: Textfeld anzeigen
             customExerciseLayout.visibility = View.VISIBLE
             selectedExerciseLabel.visibility = View.GONE
             selectedExerciseText.visibility = View.GONE
-        } else if (custom) {
-            // Bestehende Custom Exercise: Name anzeigen
-            customExerciseLayout.visibility = View.GONE
-            selectedExerciseLabel.visibility = View.VISIBLE
-            selectedExerciseText.visibility = View.VISIBLE
-            selectedExerciseText.text = exercise
         } else {
-            // Standard Exercise: Name anzeigen
+            // Bestehende Übung (Standard oder Custom): Name anzeigen
             customExerciseLayout.visibility = View.GONE
             selectedExerciseLabel.visibility = View.VISIBLE
             selectedExerciseText.visibility = View.VISIBLE
             selectedExerciseText.text = exercise
-            
-            when (exercise) {
-                getString(R.string.exercise_deadlift) -> {
-                    cardKreuzheben.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
-                    cardKreuzheben.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
-                }
-                getString(R.string.exercise_bench_press) -> {
-                    cardBankdruecken.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
-                    cardBankdruecken.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
-                }
-                getString(R.string.exercise_rowing) -> {
-                    cardRudern.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
-                    cardRudern.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
-                }
-                getString(R.string.exercise_squat) -> {
-                    cardKniebeuge.setStrokeColor(ContextCompat.getColor(this, R.color.gray_900))
-                    cardKniebeuge.setStrokeWidth(resources.getDimensionPixelSize(R.dimen.card_stroke_selected))
-                }
-            }
         }
     }
     
-    private fun resetCardBorders() {
-        val defaultStrokeColor = ContextCompat.getColor(this, R.color.gray_200)
-        val defaultStrokeWidth = resources.getDimensionPixelSize(R.dimen.card_stroke_default)
-        
-        cardKreuzheben.setStrokeColor(defaultStrokeColor)
-        cardKreuzheben.setStrokeWidth(defaultStrokeWidth)
-        cardBankdruecken.setStrokeColor(defaultStrokeColor)
-        cardBankdruecken.setStrokeWidth(defaultStrokeWidth)
-        cardRudern.setStrokeColor(defaultStrokeColor)
-        cardRudern.setStrokeWidth(defaultStrokeWidth)
-        cardKniebeuge.setStrokeColor(defaultStrokeColor)
-        cardKniebeuge.setStrokeWidth(defaultStrokeWidth)
-    }
-    
     private fun setupClickListeners() {
+        newExerciseButton.setOnClickListener {
+            selectExercise("", true)
+        }
+        
         startButton.setOnClickListener {
             if (validateInput()) {
                 startWorkout()
@@ -412,12 +291,15 @@ class WorkoutInputActivity : AppCompatActivity() {
             if (existing != null) {
                 database.customExerciseDao().updateUsage(exerciseName, currentTime)
             } else {
+                // New custom exercise - add after last exercise
+                val maxSortOrder = database.customExerciseDao().getMaxSortOrder() ?: 0
                 database.customExerciseDao().insertExercise(
                     CustomExercise(
                         name = exerciseName,
                         createdAt = currentTime,
                         lastUsed = currentTime,
-                        usageCount = 1
+                        usageCount = 1,
+                        sortOrder = maxSortOrder + 1
                     )
                 )
             }
@@ -432,6 +314,7 @@ class WorkoutInputActivity : AppCompatActivity() {
             }
             
             startActivity(intent)
+            overridePendingTransition(0, 0)
             finish()
         }
     }

@@ -16,6 +16,11 @@ class RecentExerciseAdapter(
     private val onDeleteClick: (String) -> Unit
 ) : ListAdapter<RecentExercise, RecentExerciseAdapter.ViewHolder>(DiffCallback()) {
 
+    override fun submitList(list: List<RecentExercise>?) {
+        // Disable animation for instant update
+        super.submitList(list, null)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_recent_exercise, parent, false)

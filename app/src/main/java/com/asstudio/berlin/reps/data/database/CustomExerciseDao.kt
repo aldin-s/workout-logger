@@ -17,11 +17,24 @@ interface CustomExerciseDao {
     """)
     fun getRecentlyUsed(limit: Int = 10): Flow<List<CustomExercise>>
     
-    @Query("SELECT * FROM custom_exercises WHERE isHidden = 0 AND createdAt > 0 ORDER BY createdAt DESC")
+    @Query("SELECT * FROM custom_exercises WHERE isHidden = 0 AND createdAt > 0 ORDER BY sortOrder ASC, createdAt DESC")
     fun getAllCustomExercises(): Flow<List<CustomExercise>>
     
-    @Query("SELECT * FROM custom_exercises WHERE isHidden = 0 ORDER BY name ASC")
+    @Query("SELECT * FROM custom_exercises WHERE isHidden = 0 ORDER BY sortOrder ASC, name ASC")
     fun getAllVisibleExercises(): Flow<List<CustomExercise>>
+    
+    @Query("SELECT * FROM custom_exercises WHERE isHidden = 0 ORDER BY sortOrder ASC, name ASC")
+    suspend fun getAllVisibleExercisesOnce(): List<CustomExercise>
+    
+    @Query("""
+        SELECT ce.* FROM custom_exercises ce
+        LEFT JOIN completed_sets cs ON ce.name = cs.exerciseName
+        WHERE ce.isHidden = 0 AND (cs.timestamp IS NOT NULL OR ce.lastUsed > 0)
+        GROUP BY ce.name
+        ORDER BY MAX(COALESCE(cs.timestamp, ce.lastUsed)) DESC
+        LIMIT :limit
+    """)
+    suspend fun getRecentlyUsedOnce(limit: Int = 10): List<CustomExercise>
     
     @Query("SELECT * FROM custom_exercises WHERE name = :name AND isHidden = 0")
     suspend fun getExerciseByName(name: String): CustomExercise?
@@ -37,6 +50,16 @@ interface CustomExerciseDao {
     
     @Query("UPDATE custom_exercises SET sortOrder = :sortOrder WHERE name = :name")
     suspend fun updateSortOrder(name: String, sortOrder: Int)
+    
+    @Query("SELECT MAX(sortOrder) FROM custom_exercises WHERE isHidden = 0")
+    suspend fun getMaxSortOrder(): Int?
+    
+    @Transaction
+    suspend fun updateAllSortOrders(exercises: List<CustomExercise>) {
+        exercises.forEach { exercise ->
+            updateSortOrder(exercise.name, exercise.sortOrder)
+        }
+    }
     
     @Query("DELETE FROM custom_exercises WHERE name = :name")
     suspend fun deleteExercise(name: String)
