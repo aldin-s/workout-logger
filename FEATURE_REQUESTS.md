@@ -10,110 +10,258 @@ Dokumentiere hier geplante Features und Anforderungen.
 
 **Status:** 📋 Geplant  
 **Priorität:** Hoch  
-**Erstellt:** 14.01.2026
+**Erstellt:** 14.01.2026  
+**Aktualisiert:** 14.01.2026
 
-#### Beschreibung
-Benutzer sollen zeitbasierte Übungen erstellen können (z.B. Plank, Wall Sit, Dead Hang), bei denen statt Gewicht und Wiederholungen eine **Dauer (Duration)** angegeben wird.
+---
 
 #### User Story
-> Als Benutzer möchte ich zeitbasierte Übungen erstellen können, damit ich auch isometrische Übungen und Halteübungen tracken kann.
+> Als Benutzer möchte ich zeitbasierte Übungen erstellen können (Plank, Wall Sit), damit ich auch Halteübungen tracken kann.
 
-#### Akzeptanzkriterien
-- [ ] Bei "Create Exercise" gibt es eine Option "Time-based" / "Zeitbasiert"
-- [ ] Wenn ausgewählt, werden folgende Felder angezeigt:
-  - ~~Weight (Gewicht)~~ → **Entfällt**
-  - ~~Repetitions (Wiederholungen)~~ → **Entfällt**
-  - **Duration (Dauer)** → Neu (in Sekunden oder mm:ss Format)
-  - Sets (Sätze) → Bleibt
-  - Pause Time (Pausenzeit) → Bleibt
-- [ ] Timer zeigt Countdown für die Dauer an (nicht Pausenzeit)
-- [ ] Nach Ablauf der Dauer: Vibration/Sound
-- [ ] Automatisch zum nächsten Satz wechseln (oder manuell bestätigen?)
+---
 
-#### UI/UX Konzept
+#### Design-Entscheidung: Stoppuhr statt Countdown
 
+Nach Analyse von Strong, Hevy und anderen erfolgreichen Apps:
+
+| Aspekt | Entscheidung | Begründung |
+|--------|--------------|------------|
+| Timer-Typ | ⏱️ **Stoppuhr (hochzählend)** | Flexibler, motivierend (Personal Best) |
+| Duration-Feld | ❌ Nicht nötig | User hält so lange wie möglich |
+| Speicherung | Erreichte Zeit bei "DONE" | Automatisch, kein Extra-Input |
+
+---
+
+### Phase 1: Übung erstellen (Create Exercise)
+
+#### Aktueller Flow
+```
+[Übungsname] → [Weight] → [Reps] → [Pause] → [Sets] → START
+```
+
+#### Neuer Flow mit Type-Auswahl
+```
+[Übungsname] → [Type wählen] → [Felder je nach Type] → START
+```
+
+---
+
+#### UI Design: Type-Auswahl
+
+**Option A: Toggle/Segmented Control** ⭐ Empfohlen
 ```
 ┌─────────────────────────────────────────┐
 │         CREATE NEW EXERCISE             │
 ├─────────────────────────────────────────┤
 │                                         │
-│  Exercise Name: [________________]      │
+│  Name: [  Plank________________]        │
 │                                         │
 │  Type:                                  │
-│  ┌─────────────┐  ┌─────────────┐      │
-│  │ ● Rep-based │  │ ○ Time-based│      │
-│  │  (Standard) │  │  (Duration) │      │
-│  └─────────────┘  └─────────────┘      │
-│                                         │
-│  ─────────────────────────────────────  │
-│                                         │
-│  [Wenn Time-based ausgewählt:]          │
-│                                         │
-│  Duration:     [__30__] seconds         │
-│  Sets:         [___3__]                 │
-│  Rest Time:    [__60__] seconds         │
-│                                         │
-│           [ CREATE EXERCISE ]           │
+│  ┌──────────────┬──────────────┐       │
+│  │  ● REPS     │  ○ TIME      │       │
+│  │  (Standard)  │  (Stoppuhr)  │       │
+│  └──────────────┴──────────────┘       │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 
-#### Timer-Screen für zeitbasierte Übungen
+**Option B: Radio Buttons**
+```
+│  Type:                                  │
+│  ◉ Rep-based (Gewicht & Wiederholungen) │
+│  ○ Time-based (Stoppuhr)                │
+```
 
+**Empfehlung:** Option A (Segmented Control) - moderner, platzsparender
+
+---
+
+#### Felder je nach Type
+
+**REPS (Standard) - wie aktuell:**
 ```
 ┌─────────────────────────────────────────┐
-│              PLANK                      │
-│         ─────────────                   │
+│  Weight:       [ 80.0 ] kg              │
+│  Repetitions:  [ 10   ]                 │
+│  Rest Time:    [ 60   ] sec             │
+│  Sets:         [ 4    ]                 │
 │                                         │
-│              00:45                      │
-│           (remaining)                   │
-│                                         │
-│            Set 2/3                      │
-│                                         │
-│      [ SKIP ]    [ DONE EARLY ]         │
-│                                         │
+│            [ START ]                    │
 └─────────────────────────────────────────┘
 ```
 
-#### Technische Überlegungen
+**TIME (neu) - vereinfacht:**
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│  Rest Time:    [ 45   ] sec             │
+│  Sets:         [ 3    ]                 │
+│                                         │
+│  ℹ️ Timer läuft hoch bis du             │
+│     "DONE" drückst                      │
+│                                         │
+│            [ START ]                    │
+└─────────────────────────────────────────┘
+```
 
-1. **Datenbank-Änderung:**
-   ```kotlin
-   @Entity
-   data class Exercise(
-       val name: String,
-       val isTimeBased: Boolean = false,  // NEU
-       val defaultDurationSeconds: Int? = null  // NEU
-   )
-   
-   data class CompletedSet(
-       // ... existierende Felder
-       val durationSeconds: Int? = null,  // NEU (alternativ zu reps)
-       val isTimeBased: Boolean = false   // NEU
-   )
-   ```
+**Felder-Vergleich:**
 
-2. **Timer-Logik:**
-   - Bei Rep-based: Timer = Pausenzeit (wie aktuell)
-   - Bei Time-based: Timer = Duration, dann Pausenzeit
+| Feld | REPS | TIME |
+|------|------|------|
+| Weight | ✅ | ❌ |
+| Repetitions | ✅ | ❌ |
+| Rest Time | ✅ | ✅ |
+| Sets | ✅ | ✅ |
 
-3. **History-Anzeige:**
-   - Rep-based: "3x10 @ 80kg"
-   - Time-based: "3x 45s" oder "3x 0:45"
+---
 
-#### Offene Fragen
-- [ ] Soll nach Ablauf der Duration automatisch pausiert werden oder manuell bestätigt?
-- [ ] Soll es einen "Done Early" Button geben?
-- [ ] Duration als Sekunden-Input oder als mm:ss Picker?
-- [ ] Sollen zeitbasierte Übungen auch ein optionales Gewicht haben? (z.B. Weighted Plank)
+### Phase 2: Timer-Screen (Workout)
 
-#### Beispiel-Übungen (Time-based)
+#### REPS (wie aktuell)
+```
+┌─────────────────────────────────────────┐
+│              BANKDRÜCKEN                │
+│            ─────────────                │
+│               80 kg                     │
+│                                         │
+│              00:45                      │
+│            (Countdown)                  │
+│                                         │
+│             Satz 2/4                    │
+│                                         │
+│      [ PAUSE LÄUFT... ]                 │
+│              ↓                          │
+│      [ SATZ FERTIG ✓ ]                  │
+└─────────────────────────────────────────┘
+```
+
+#### TIME (neu)
+```
+┌─────────────────────────────────────────┐
+│                PLANK                    │
+│            ─────────────                │
+│                                         │
+│              00:47                      │
+│            (Stoppuhr ↑)                 │
+│                                         │
+│             Satz 2/3                    │
+│                                         │
+│  Letzter: 0:42  │  Best: 0:51          │
+│                                         │
+│         [ ✓ SATZ FERTIG ]               │
+└─────────────────────────────────────────┘
+```
+
+**Unterschiede:**
+- Timer läuft **hoch** statt runter
+- Kein Gewicht angezeigt
+- Zeigt **Previous** und **Best** Zeit
+- Button ist sofort aktiv (kein Warten auf Timer)
+
+---
+
+### Phase 3: History & Statistik
+
+#### Anzeige in History
+
+**REPS:**
+```
+BANKDRÜCKEN        80 kg · 4×10
+```
+
+**TIME:**
+```
+PLANK              3× 0:47 avg
+                   Best: 0:51
+```
+
+---
+
+### Technische Implementierung
+
+#### 1. Datenbank-Migration
+
+```kotlin
+// Exercise Entity - Änderung
+@Entity
+data class Exercise(
+    @PrimaryKey val id: Long = 0,
+    val name: String,
+    val isTimeBased: Boolean = false  // NEU
+)
+
+// CompletedSet Entity - Änderung
+@Entity
+data class CompletedSet(
+    // ... existierende Felder
+    val durationSeconds: Int? = null,  // NEU: für Time-based
+    // weight und reps bleiben nullable
+)
+```
+
+#### 2. UI Komponenten
+
+```kotlin
+// Neuer Composable oder XML für Type-Auswahl
+// SegmentedButton mit REPS / TIME
+
+// WorkoutInputActivity anpassen:
+// - Type-Auswahl hinzufügen
+// - Felder basierend auf Type ein/ausblenden
+
+// TimerActivity/ViewModel anpassen:
+// - Stoppuhr-Modus (hochzählend)
+// - Previous/Best anzeigen
+```
+
+#### 3. Ablauf-Logik
+
+```
+TIME-BASED WORKFLOW:
+1. User drückt START
+2. Timer startet bei 00:00 und zählt HOCH
+3. User drückt "SATZ FERTIG" wenn er aufgibt
+4. Erreichte Zeit wird gespeichert
+5. Rest-Time Countdown startet (wie bei REPS)
+6. Nach Rest-Time: Nächster Satz
+7. Wiederholen bis alle Sätze durch
+```
+
+---
+
+### Akzeptanzkriterien
+
+#### Phase 1: Create Exercise
+- [ ] Segmented Control für Type (REPS / TIME)
+- [ ] Bei TIME: Weight und Reps ausblenden
+- [ ] Rest Time und Sets bleiben sichtbar
+- [ ] Übung wird mit `isTimeBased=true` gespeichert
+
+#### Phase 2: Timer Screen
+- [ ] Bei Time-based: Stoppuhr (hochzählend)
+- [ ] Button sofort aktiv (kein Warten)
+- [ ] Zeigt "Previous" und "Best" Zeit
+- [ ] Speichert `durationSeconds` statt `reps`
+
+#### Phase 3: History
+- [ ] Time-based Übungen zeigen Durchschnittszeit
+- [ ] Personal Best wird angezeigt
+
+---
+
+### Beispiel-Übungen (Time-based)
 - Plank
 - Side Plank
 - Wall Sit
 - Dead Hang
 - L-Sit
 - Hollow Body Hold
+
+---
+
+### Offene Fragen
+- [ ] Soll es einen "Pause" Button geben während der Stoppuhr?
+- [ ] Weighted Time-based (z.B. Weighted Plank) in Phase 2?
 - Superman Hold
 
 ---
