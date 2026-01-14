@@ -55,7 +55,7 @@ class WorkoutInputActivity : AppCompatActivity() {
         
         initViews()
         setupRecyclerViews()
-        initializeStandardExercises()
+        initializeStandardExercisesOnce()
         setupClickListeners()
         setDefaultValues()
         loadExercises()
@@ -67,7 +67,16 @@ class WorkoutInputActivity : AppCompatActivity() {
         loadExercises()
     }
     
-    private fun initializeStandardExercises() {
+    /**
+     * Initializes standard exercises ONLY ONCE per installation.
+     * Uses SharedPreferences flag to ensure deleted exercises stay deleted.
+     */
+    private fun initializeStandardExercisesOnce() {
+        // Check if already initialized (returns true only once per installation)
+        if (!WorkoutDatabase.shouldInitializeStandardExercises(this)) {
+            return
+        }
+        
         lifecycleScope.launch {
             val standardExercises = listOf(
                 getString(R.string.exercise_deadlift) to 1,

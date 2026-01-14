@@ -32,6 +32,10 @@
     <string name="set_format">Satz %1$d/%2$d</string>
     <string name="pause_running">PAUSE LÄUFT…</string>
     <string name="set_done">SATZ FERTIG</string>
+    <string name="cancel_workout_title">Workout abbrechen?</string>
+    <string name="cancel_workout_message">Dein aktuelles Workout wird beendet. Bereits abgeschlossene Sätze bleiben gespeichert.</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
     
     <!-- Timer Notification -->
     <string name="timer_notification_channel_name">Workout Timer</string>

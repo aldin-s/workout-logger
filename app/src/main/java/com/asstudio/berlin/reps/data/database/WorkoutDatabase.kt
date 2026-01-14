@@ -25,6 +25,9 @@ abstract class WorkoutDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: WorkoutDatabase? = null
         
+        private const val PREFS_NAME = "workout_db_prefs"
+        private const val KEY_STANDARD_EXERCISES_INITIALIZED = "standard_exercises_initialized"
+        
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("""
@@ -57,6 +60,20 @@ abstract class WorkoutDatabase : RoomDatabase() {
                 INSTANCE = instance
                 instance
             }
+        }
+        
+        /**
+         * Checks if standard exercises need to be initialized.
+         * Returns true only ONCE per installation.
+         */
+        fun shouldInitializeStandardExercises(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val initialized = prefs.getBoolean(KEY_STANDARD_EXERCISES_INITIALIZED, false)
+            if (!initialized) {
+                prefs.edit().putBoolean(KEY_STANDARD_EXERCISES_INITIALIZED, true).apply()
+                return true
+            }
+            return false
         }
     }
 }

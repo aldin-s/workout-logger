@@ -15,7 +15,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.asstudio.berlin.reps.BuildConfig
@@ -254,16 +256,18 @@ class SettingsActivity : AppCompatActivity() {
             getString(R.string.language_english)
         )
         val values = arrayOf("de", "en")
-        val current = prefs.getString(PREF_LANGUAGE, "de") ?: "de"
-        val selected = values.indexOf(current)
+        // Aktuelle Sprache aus AppCompat API lesen
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val current = if (currentLocales.isEmpty) "de" else currentLocales.toLanguageTags()
+        val selected = values.indexOfFirst { current.startsWith(it) }.coerceAtLeast(0)
 
         AlertDialog.Builder(this)
             .setTitle(R.string.language)
             .setSingleChoiceItems(options, selected) { dialog, which ->
-                prefs.edit().putString(PREF_LANGUAGE, values[which]).apply()
+                // Moderne API: Setzt Locale und startet Activities automatisch neu
+                val localeList = LocaleListCompat.forLanguageTags(values[which])
+                AppCompatDelegate.setApplicationLocales(localeList)
                 dialog.dismiss()
-                // Restart app to apply language
-                Toast.makeText(this, "Please restart the app", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(R.string.action_cancel, null)
             .show()

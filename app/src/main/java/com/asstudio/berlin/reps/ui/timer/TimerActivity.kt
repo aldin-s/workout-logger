@@ -11,42 +11,46 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.WindowManager
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.asstudio.berlin.reps.R
-import com.asstudio.berlin.reps.data.database.WorkoutDatabase
-import com.asstudio.berlin.reps.data.model.CompletedSet
 import com.asstudio.berlin.reps.service.TimerService
 import com.asstudio.berlin.reps.ui.settings.SettingsActivity
 import com.asstudio.berlin.reps.ui.tracking.TrackingActivity
 import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Date
 
+/**
+ * Timer-Screen für das Workout.
+ * 
+ * Diese Activity ist nur für UI-Rendering zuständig.
+ * Alle Logik und State-Verwaltung erfolgt im TimerViewModel.
+ */
 class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
 
+    // ViewModel - Single Source of Truth für den UI-Zustand
+    private val viewModel: TimerViewModel by viewModels()
+    
+    // UI-Elemente
     private lateinit var timerTextView: TextView
     private lateinit var setsTextView: TextView
     private lateinit var exerciseNameTextView: TextView
     private lateinit var weightTextView: TextView
     private lateinit var doneButton: MaterialButton
     
+    // Service-Verbindung
     private var timerService: TimerService? = null
     private var serviceBound = false
     
-    private var currentSet: Int = 1
-    
-    // Workout data from intent
-    private lateinit var exerciseName: String
-    private var weight: Double = 0.0
-    private var plannedReps: Int = 0
-    private var pauseTimeSeconds: Int = 60
-    private var totalSets: Int = 0
-    
-    private lateinit var database: WorkoutDatabase
+    // Flag um zu erkennen, ob Activity durch Rotation zerstört wird
+    private var isConfigurationChange = false
     
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -55,21 +59,11 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
             timerService?.setTimerUpdateListener(this@TimerActivity)
             serviceBound = true
             
-            // Update UI with current timer state
-            timerService?.let { service ->
-                updateTimer(service.getTimeLeftInMillis())
-                val isRunning = service.isRunning()
-                
-                // Button should be disabled when timer is running OR when we're waiting for first timer to start
-                if (isRunning) {
-                    setButtonDisabled()
-                } else if (currentSet == 1) {
-                    // First set: keep button disabled, timer is starting
-                    setButtonDisabled()
-                } else {
-                    // Timer finished, enable button
-                    setButtonEnabled()
-                }
+            // Zustand vom Service an ViewModel übergeben
+            timerService?.let { svc ->
+                val timeLeft = svc.getTimeLeftInMillis()
+                val isRunning = svc.isRunning()
+                viewModel.restoreState(timeLeft, isRunning)
             }
         }
 
@@ -83,9 +77,8 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
     // Permission launcher for Android 13+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+    ) { _ ->
         // Start service regardless of permission result
-        // Service will work, just without notification on denied
         startTimerServiceInternal()
     }
 
@@ -93,66 +86,154 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_timer)
         
-        // Apply keep screen on setting
         applyKeepScreenOnSetting()
-
+        initializeViews()
+        
+        // ViewModel initialisieren (nur beim ersten Start)
+        if (savedInstanceState == null) {
+            initializeViewModel()
+            checkNotificationPermissionAndStartService()
+        }
+        
+        bindTimerService()
+        setupClickListeners()
+        observeUiState()
+    }
+    
+    private fun initializeViews() {
         timerTextView = findViewById(R.id.timerTextView)
         setsTextView = findViewById(R.id.setsTextView)
         exerciseNameTextView = findViewById(R.id.exerciseNameTextView)
         weightTextView = findViewById(R.id.weightTextView)
         doneButton = findViewById(R.id.doneButton)
-
-        // Get workout data from intent
-        exerciseName = intent.getStringExtra("EXERCISE_NAME") ?: ""
-        weight = intent.getDoubleExtra("WEIGHT", 0.0)
-        plannedReps = intent.getIntExtra("REPS", 0)
-        pauseTimeSeconds = intent.getIntExtra("PAUSE_TIME", 60)
-        totalSets = intent.getIntExtra("TOTAL_SETS", 1)
+    }
+    
+    private fun initializeViewModel() {
+        val exerciseName = intent.getStringExtra("EXERCISE_NAME") ?: ""
+        val weight = intent.getDoubleExtra("WEIGHT", 0.0)
+        val plannedReps = intent.getIntExtra("REPS", 0)
+        val pauseTimeSeconds = intent.getIntExtra("PAUSE_TIME", 60)
+        val totalSets = intent.getIntExtra("TOTAL_SETS", 1)
         
-        database = WorkoutDatabase.getDatabase(this)
-        
-        // Restore state or initialize fresh
-        if (savedInstanceState != null) {
-            currentSet = savedInstanceState.getInt(KEY_CURRENT_SET, 1)
-        } else {
-            currentSet = 1
+        viewModel.initializeWorkout(
+            exerciseName = exerciseName,
+            weight = weight,
+            plannedReps = plannedReps,
+            pauseTimeSeconds = pauseTimeSeconds,
+            totalSets = totalSets
+        )
+    }
+    
+    private fun setupClickListeners() {
+        doneButton.setOnClickListener {
+            handleSetCompleted()
         }
         
-        // Initialize display
-        exerciseNameTextView.text = exerciseName.uppercase()
-        weightTextView.text = String.format(getString(R.string.weight_format), weight)
-        updateSetsDisplay()
-        
-        // Disable button initially - will be enabled once service connects and timer state is known
-        setButtonDisabled()
-        
-        // Check notification permission and start service
-        checkNotificationPermissionAndStartService()
-        bindTimerService()
-
-        doneButton.setOnClickListener {
-            markSetAsCompleted()
+        // Back-Button mit Bestätigungsdialog
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showExitConfirmationDialog()
+            }
+        })
+    }
+    
+    /**
+     * Beobachtet den UI-State und aktualisiert die Views entsprechend.
+     * Dies ist die einzige Stelle, die UI-Updates durchführt.
+     */
+    private fun observeUiState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    renderState(state)
+                }
+            }
         }
     }
     
+    /**
+     * Rendert den UI-State in die Views.
+     * Klare Trennung: Jeder State führt zu einem definierten UI-Zustand.
+     */
+    private fun renderState(state: TimerUiState) {
+        when (state) {
+            is TimerUiState.Loading -> {
+                // Warten auf Service-Verbindung
+                setButtonDisabled()
+            }
+            
+            is TimerUiState.Running -> {
+                exerciseNameTextView.text = state.exerciseName.uppercase()
+                weightTextView.text = state.weightFormatted
+                timerTextView.text = state.timeLeftFormatted
+                setsTextView.text = state.setsFormatted
+                setButtonDisabled()
+            }
+            
+            is TimerUiState.WaitingForSetComplete -> {
+                exerciseNameTextView.text = state.exerciseName.uppercase()
+                weightTextView.text = state.weightFormatted
+                timerTextView.text = "00:00"
+                setsTextView.text = state.setsFormatted
+                setButtonEnabled()
+            }
+            
+            is TimerUiState.WorkoutCompleted -> {
+                navigateToTrackingScreen(state)
+            }
+            
+            is TimerUiState.Error -> {
+                showServiceErrorDialog(state.message)
+            }
+        }
+    }
+    
+    private fun handleSetCompleted() {
+        // Sound stoppen
+        timerService?.stopSound()
+        
+        // ViewModel aktualisieren und Ergebnis verarbeiten
+        when (val result = viewModel.onSetCompleted()) {
+            is TimerViewModel.SetCompletedResult.NextSet -> {
+                // Neuen Timer im Service starten
+                timerService?.resetTimer(result.pauseTimeSeconds, result.setNumber)
+            }
+            is TimerViewModel.SetCompletedResult.WorkoutFinished -> {
+                // Wird durch State-Observation behandelt (navigateToTrackingScreen)
+            }
+        }
+    }
+    
+    // ============ Service-Kommunikation ============
+    
+    override fun onTimerTick(timeLeftInMillis: Long) {
+        runOnUiThread {
+            viewModel.onTimerTick(timeLeftInMillis)
+        }
+    }
+    
+    override fun onTimerFinish() {
+        runOnUiThread {
+            viewModel.onTimerFinished()
+        }
+    }
+    
+    // ============ Service Lifecycle ============
+    
     private fun checkNotificationPermissionAndStartService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ requires POST_NOTIFICATIONS permission
             when {
                 ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    // Permission granted, start service
                     startTimerServiceInternal()
                 }
                 else -> {
-                    // Request permission
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         } else {
-            // Below Android 13, no runtime permission needed
             startTimerServiceInternal()
         }
     }
@@ -161,10 +242,10 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         try {
             val serviceIntent = Intent(this, TimerService::class.java).apply {
                 action = TimerService.ACTION_START_TIMER
-                putExtra(TimerService.EXTRA_PAUSE_TIME, pauseTimeSeconds)
-                putExtra(TimerService.EXTRA_CURRENT_SET, currentSet)
-                putExtra(TimerService.EXTRA_TOTAL_SETS, totalSets)
-                putExtra(TimerService.EXTRA_EXERCISE_NAME, exerciseName)
+                putExtra(TimerService.EXTRA_PAUSE_TIME, viewModel.getPauseTimeSeconds())
+                putExtra(TimerService.EXTRA_CURRENT_SET, viewModel.getCurrentSet())
+                putExtra(TimerService.EXTRA_TOTAL_SETS, viewModel.getTotalSets())
+                putExtra(TimerService.EXTRA_EXERCISE_NAME, viewModel.getExerciseName())
             }
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -172,54 +253,20 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
             } else {
                 startService(serviceIntent)
             }
-        } catch (e: SecurityException) {
-            // Android 14+ security exception
-            android.util.Log.e("TimerActivity", "SecurityException starting service", e)
-            showServiceErrorDialog()
-        } catch (e: IllegalStateException) {
-            // Xiaomi/Samsung specific restrictions or background limitations
-            android.util.Log.e("TimerActivity", "IllegalStateException starting service", e)
-            showServiceErrorDialog()
         } catch (e: Exception) {
-            // Catch any other exception (ForegroundServiceStartNotAllowedException on Android 12+)
-            android.util.Log.e("TimerActivity", "Failed to start foreground service", e)
-            showServiceErrorDialog()
+            android.util.Log.e("TimerActivity", "Failed to start service", e)
+            viewModel.onServiceError("Timer-Service konnte nicht gestartet werden")
         }
-    }
-    
-    private fun showServiceErrorDialog() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Service-Fehler")
-            .setMessage("Timer-Service konnte nicht gestartet werden.\n\nBitte erlaube:\n• Benachrichtigungen\n• Hintergrund-Aktivitäten\n• Autostart\n\nin den App-Einstellungen.")
-            .setPositiveButton("Einstellungen") { _, _ ->
-                try {
-                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.data = android.net.Uri.parse("package:$packageName")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    android.widget.Toast.makeText(this, "Einstellungen nicht verfügbar", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Abbrechen") { _, _ ->
-                finish()
-            }
-            .setCancelable(false)
-            .show()
-    }
-    
-    @Deprecated("Use checkNotificationPermissionAndStartService instead")
-    private fun startTimerService() {
-        startTimerServiceInternal()
     }
     
     private fun bindTimerService() {
         val bindIntent = Intent(this, TimerService::class.java)
         bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
-
+    
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt(KEY_CURRENT_SET, currentSet)
+        isConfigurationChange = true
     }
     
     override fun onDestroy() {
@@ -230,100 +277,76 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
             serviceBound = false
         }
         
-        // Stop service when activity is destroyed
-        val serviceIntent = Intent(this, TimerService::class.java).apply {
-            action = TimerService.ACTION_STOP_TIMER
-        }
-        startService(serviceIntent)
-    }
-    
-    override fun onTimerTick(timeLeftInMillis: Long) {
-        runOnUiThread {
-            updateTimer(timeLeftInMillis)
+        // Service NUR stoppen wenn Activity wirklich beendet wird
+        if (!isConfigurationChange && !isChangingConfigurations) {
+            val serviceIntent = Intent(this, TimerService::class.java).apply {
+                action = TimerService.ACTION_STOP_TIMER
+            }
+            startService(serviceIntent)
         }
     }
     
-    override fun onTimerFinish() {
-        runOnUiThread {
-            timerTextView.text = "00:00"
-            setButtonEnabled()
-        }
-    }
-
-    private fun updateTimer(timeLeft: Long) {
-        val seconds = (timeLeft / 1000).toInt()
-        timerTextView.text = String.format("%02d:%02d", seconds / 60, seconds % 60)
-    }
-
-    private fun updateSetsDisplay() {
-        setsTextView.text = String.format(getString(R.string.set_format), currentSet, totalSets)
-    }
+    // ============ UI Helpers ============
     
     private fun setButtonDisabled() {
         doneButton.isEnabled = false
         doneButton.text = getString(R.string.pause_running)
         doneButton.alpha = 0.5f
-        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.gray_400))
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(this, R.color.gray_400)
+        )
     }
     
     private fun setButtonEnabled() {
         doneButton.isEnabled = true
         doneButton.text = getString(R.string.set_done)
         doneButton.alpha = 1.0f
-        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.gray_900))
-    }
-
-    private fun markSetAsCompleted() {
-        // Stop any playing sound from service
-        timerService?.stopSound()
-        
-        // Log completed set to database
-        logCompletedSet()
-        
-        if (currentSet >= totalSets) {
-            finishWorkout()
-        } else {
-            currentSet++
-            updateSetsDisplay()
-            // Start new timer for next set via service
-            timerService?.resetTimer(pauseTimeSeconds, currentSet)
-            setButtonDisabled()
-        }
-    }
-
-    private fun logCompletedSet() {
-        val completedSet = CompletedSet(
-            exerciseName = exerciseName,
-            weight = weight,
-            plannedReps = plannedReps,
-            completedReps = plannedReps, // User completed planned reps when DONE pressed
-            setNumber = currentSet,
-            timestamp = Date()
+        doneButton.strokeColor = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(this, R.color.gray_900)
         )
-        
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                database.completedSetDao().insert(completedSet)
-            } catch (e: Exception) {
-                android.util.Log.e("TimerActivity", "Error logging completed set", e)
-                kotlinx.coroutines.withContext(Dispatchers.Main) {
-                    androidx.appcompat.app.AlertDialog.Builder(this@TimerActivity)
-                        .setTitle(R.string.error_title)
-                        .setMessage(R.string.error_save_workout)
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                }
-            }
-        }
     }
-
-    private fun finishWorkout() {
-        val intent = Intent(this, TrackingActivity::class.java)
-        intent.putExtra("SETS_COMPLETED", currentSet)
-        intent.putExtra("EXERCISE_NAME", exerciseName)
-        intent.putExtra("WEIGHT", weight)
+    
+    private fun navigateToTrackingScreen(state: TimerUiState.WorkoutCompleted) {
+        val intent = Intent(this, TrackingActivity::class.java).apply {
+            putExtra("SETS_COMPLETED", state.totalSetsCompleted)
+            putExtra("EXERCISE_NAME", state.exerciseName)
+            putExtra("WEIGHT", state.weight)
+        }
         startActivity(intent)
         finish()
+    }
+    
+    private fun showExitConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.cancel_workout_title)
+            .setMessage(R.string.cancel_workout_message)
+            .setPositiveButton(R.string.yes) { _, _ ->
+                val serviceIntent = Intent(this, TimerService::class.java).apply {
+                    action = TimerService.ACTION_STOP_TIMER
+                }
+                startService(serviceIntent)
+                finish()
+            }
+            .setNegativeButton(R.string.no, null)
+            .show()
+    }
+    
+    private fun showServiceErrorDialog(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Service-Fehler")
+            .setMessage("$message\n\nBitte erlaube:\n• Benachrichtigungen\n• Hintergrund-Aktivitäten")
+            .setPositiveButton("Einstellungen") { _, _ ->
+                try {
+                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = android.net.Uri.parse("package:$packageName")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(this, "Einstellungen nicht verfügbar", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Abbrechen") { _, _ -> finish() }
+            .setCancelable(false)
+            .show()
     }
     
     private fun applyKeepScreenOnSetting() {
@@ -335,9 +358,5 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-    }
-    
-    companion object {
-        private const val KEY_CURRENT_SET = "current_set"
     }
 }

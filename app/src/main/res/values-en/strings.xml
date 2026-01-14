@@ -32,6 +32,10 @@
     <string name="set_format">Set %1$d/%2$d</string>
     <string name="pause_running">REST PERIOD…</string>
     <string name="set_done">SET DONE</string>
+    <string name="cancel_workout_title">Cancel Workout?</string>
+    <string name="cancel_workout_message">Your current workout will be stopped. Already completed sets remain saved.</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     
     <!-- Timer Notification -->
     <string name="timer_notification_channel_name">Workout Timer</string>
