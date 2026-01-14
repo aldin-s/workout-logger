@@ -6,44 +6,16 @@ Dokumentiere hier Bugs, damit sie behoben werden können.
 
 ## Offene Bugs
 
-### Bug #3: Timer-Architektur benötigt Refactoring
-- **Status:** 🟡 Technische Schuld
+### ~~Bug #3: Timer-Architektur benötigt Refactoring~~
+- **Status:** ✅ Behoben
 - **Seite/Datei:** TimerActivity.kt, TimerService.kt
-- **Beschreibung:** Die Timer-Implementierung hat architektonische Schwächen, die zu Race Conditions und schwer testbarem Code führen.
-- **Probleme:**
-  1. **Verstreuter State** - Button-Zustand wird an 4 Stellen gesetzt (`onServiceConnected`, `onTimerFinish`, `markSetAsCompleted`, `onCreate`)
-  2. **Kein Single Source of Truth** - Timer-Zustand im Service, UI-Zustand in der Activity
-  3. **Race Conditions** - Service-Binding ist asynchron, UI kann falsch sein
-  4. **Keine testbare Logik** - Activity enthält Business-Logik (Unit Tests nicht möglich)
-- **Best Practice Lösung:**
-  ```
-  ┌─────────────────────────────────────────────────────┐
-  │                    TimerActivity                     │
-  │         (nur UI, keine Logik)                        │
-  │         observes: viewModel.uiState                  │
-  └─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-  ┌─────────────────────────────────────────────────────┐
-  │                   TimerViewModel                     │
-  │   - StateFlow<TimerUiState>                          │
-  │   - Sealed Class für Zustände                        │
-  │   - Alle UI-Entscheidungen hier                      │
-  └─────────────────────────────────────────────────────┘
-                          │
-                          ▼
-  ┌─────────────────────────────────────────────────────┐
-  │                   TimerService                       │
-  │   - Nur Timer-Logik                                  │
-  │   - Broadcast/Flow für Updates                       │
-  └─────────────────────────────────────────────────────┘
-  ```
-- **Vorteile des Refactorings:**
-  - ✅ Einfacher zu testen (Unit Tests für ViewModel)
-  - ✅ Keine Race Conditions
-  - ✅ Klare Zustandsübergänge
-  - ✅ Einfacher zu debuggen
-- **Priorität:** Mittel (funktioniert, aber nicht optimal)
+- **Beschreibung:** Die Timer-Implementierung hatte architektonische Schwächen
+- **Lösung:** 
+  - `TimerUiState` Sealed Class für alle UI-Zustände
+  - `TimerViewModel` als Single Source of Truth
+  - Activity nur noch für UI-Rendering
+  - StateFlow für reaktive UI-Updates
+- **Datum:** 14.01.2026
 
 ---
 
