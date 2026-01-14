@@ -699,6 +699,175 @@ TIME-BASED WORKFLOW:
 
 ---
 
+## 🔋 Screen Wake Management (Time-Based)
+
+### Problem
+
+| Situation | Problem |
+|-----------|---------|
+| User hält Plank 60 Sekunden | Bildschirm geht nach 30s aus (Device-Default) |
+| User muss "FERTIG" drücken | Erst entsperren, dann Button finden |
+| Timer läuft im Background | User sieht keine aktuelle Zeit |
+| Motivation sinkt | Kein visuelles Feedback während Übung |
+
+---
+
+### Lösung: 3-Schichten Ansatz
+
+```
+┌─────────────────────────────────────────────┐
+│  Schicht 1: FLAG_KEEP_SCREEN_ON             │
+│  → Bildschirm bleibt an während Timer läuft │
+├─────────────────────────────────────────────┤
+│  Schicht 2: Notification Action Button      │
+│  → "FERTIG" auch bei Lock-Screen drückbar   │
+├─────────────────────────────────────────────┤
+│  Schicht 3: Dimming (optional)              │
+│  → Helligkeit reduzieren für Batteriesparen │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Implementierung
+
+#### Schicht 1: Keep Screen On (TimerActivity.kt)
+
+```kotlin
+class TimerActivity : AppCompatActivity() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // NEU: Screen Wake für Time-Based
+        val isTimeBased = intent.getBooleanExtra("IS_TIME_BASED", false)
+        if (isTimeBased) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+    
+    override fun onDestroy() {
+        // Flag wieder entfernen
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        super.onDestroy()
+    }
+}
+```
+
+**Keine Permission nötig!** ✅
+
+---
+
+#### Schicht 2: Notification mit Action (TimerService.kt)
+
+**Aktuelle Notification:**
+```
+┌─────────────────────────────┐
+│ 🏋️ Timer läuft              │
+│    00:47                    │
+└─────────────────────────────┘
+```
+
+**Erweiterte Notification für TIME:**
+```
+┌─────────────────────────────┐
+│ 🏋️ PLANK - Satz 2/3         │
+│    00:47 ↑                  │
+│                             │
+│  [ ✓ SATZ FERTIG ]          │  ← Action Button
+└─────────────────────────────┘
+```
+
+```kotlin
+// In TimerService.kt - Notification Builder erweitern
+private fun createNotification(isTimeBased: Boolean): Notification {
+    val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle(if (isTimeBased) "$exerciseName - Satz $currentSet/$totalSets" else "Timer läuft")
+        .setContentText(formatTime(elapsedTime))
+        .setSmallIcon(R.drawable.ic_timer)
+        .setOngoing(true)
+    
+    // Action Button NUR für Time-Based
+    if (isTimeBased) {
+        val finishIntent = Intent(this, TimerService::class.java).apply {
+            action = ACTION_SET_COMPLETE
+        }
+        val finishPendingIntent = PendingIntent.getService(
+            this, 0, finishIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        builder.addAction(
+            R.drawable.ic_check,
+            "SATZ FERTIG",
+            finishPendingIntent
+        )
+    }
+    
+    return builder.build()
+}
+```
+
+---
+
+#### Schicht 3: Dimming (Optional - Battery Saver)
+
+```kotlin
+/**
+ * Reduziert Helligkeit während Time-Based Übung.
+ * User kann Timer noch sehen, aber Batterie wird geschont.
+ */
+private fun enableBatterySaverMode() {
+    val layoutParams = window.attributes
+    originalBrightness = layoutParams.screenBrightness
+    layoutParams.screenBrightness = 0.15f  // 15% Helligkeit
+    window.attributes = layoutParams
+}
+
+private fun disableBatterySaverMode() {
+    val layoutParams = window.attributes
+    layoutParams.screenBrightness = originalBrightness
+    window.attributes = layoutParams
+}
+```
+
+**⚠️ Optional:** Nur implementieren wenn User explizit Batterie sparen will.
+
+---
+
+### Vergleich: REPS vs TIME
+
+| Aspekt | REPS | TIME |
+|--------|------|------|
+| Screen Timeout | Normal (Device-Setting) | Deaktiviert |
+| Notification | Einfach (nur Zeit) | Mit Action Button |
+| Batterie-Impact | Minimal | Moderat |
+| User-Interaktion | Nach Countdown | Jederzeit möglich |
+
+---
+
+### Edge Cases
+
+| Szenario | Verhalten |
+|----------|-----------|
+| User verlässt App während TIME | Service läuft weiter, Notification bleibt |
+| User dreht Handy | Timer läuft weiter (ViewModel) |
+| Anruf kommt rein | Timer pausiert NICHT (bewusste Entscheidung) |
+| Low Battery Mode | `FLAG_KEEP_SCREEN_ON` wird ggf. vom System ignoriert |
+
+---
+
+### Akzeptanzkriterien
+
+- [ ] **TIME:** Bildschirm bleibt an während Stoppuhr läuft
+- [ ] **TIME:** Notification zeigt "SATZ FERTIG" Button
+- [ ] **TIME:** Action Button funktioniert auch bei Lock-Screen
+- [ ] **REPS:** Keine Änderung am bisherigen Verhalten
+- [ ] **Cleanup:** Flag wird bei Activity-Destroy entfernt
+- [ ] **Rotation:** Screen-Wake überlebt Configuration Change
+
+---
+
 ## Umgesetzt
 
 *Noch keine Features umgesetzt.*
