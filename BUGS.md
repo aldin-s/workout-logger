@@ -6,35 +6,17 @@ Dokumentiere hier Bugs, damit sie behoben werden können.
 
 ## Offene Bugs
 
-### Bug #2: Gelöschte Standard-Übungen erscheinen wieder
-- **Status:** ✅ Behoben
-- **Seite/Datei:** TimerActivity.kt, TimerService.kt
-- **Beschreibung:** Die Timer-Implementierung hatte architektonische Schwächen
-- **Lösung:** 
-  - `TimerUiState` Sealed Class für alle UI-Zustände
-  - `TimerViewModel` als Single Source of Truth
-  - Activity nur noch für UI-Rendering
-  - StateFlow für reaktive UI-Updates
-- **Datum:** 14.01.2026
-
----
-
-### Bug #2: Gelöschte Standard-Übungen erscheinen wieder
-- **Status:** 🔴 Offen
-- **Seite/Datei:** WorkoutInputActivity.kt
-- **Beschreibung:** Wenn man eine Standard-Übung (z.B. "Squat") löscht und zurück geht, ist sie beim nächsten Öffnen von "Start Workout" wieder da
-- **Erwartet:** Gelöschte Übungen sollten gelöscht bleiben
-- **Schritte:**
-  1. "Start Workout" öffnen
-  2. "Squat" löschen (Bestätigung erscheint: "gelöscht")
-  3. Zurück gehen
-  4. "Start Workout" erneut öffnen
-  5. ❌ Squat ist wieder da
-- **Vermutete Ursache:** `initializeStandardExercises()` in `onCreate()` erstellt Standard-Übungen neu, ohne zu prüfen ob sie vom User gelöscht wurden. Es fehlt ein "isDeleted" Flag oder ähnliches.
+*Keine offenen Bugs! 🎉*
 
 ---
 
 ## Behobene Bugs
+
+### ~~Bug #2: Gelöschte Standard-Übungen erscheinen wieder~~
+- **Status:** ✅ Behoben
+- **Seite/Datei:** WorkoutInputActivity.kt
+- **Beschreibung:** Wenn man eine Standard-Übung löschte, war sie beim nächsten Öffnen wieder da
+- **Datum:** 14.01.2026
 
 ### ~~Bug #9: Notification bleibt nach Workout-Ende stehen~~
 - **Status:** ✅ Behoben
