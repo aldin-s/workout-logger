@@ -279,10 +279,7 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         
         // Service NUR stoppen wenn Activity wirklich beendet wird
         if (!isConfigurationChange && !isChangingConfigurations) {
-            val serviceIntent = Intent(this, TimerService::class.java).apply {
-                action = TimerService.ACTION_STOP_TIMER
-            }
-            startService(serviceIntent)
+            stopTimerService()
         }
     }
     
@@ -307,6 +304,9 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
     }
     
     private fun navigateToTrackingScreen(state: TimerUiState.WorkoutCompleted) {
+        // WICHTIG: Service explizit stoppen damit Notification verschwindet
+        stopTimerService()
+        
         val intent = Intent(this, TrackingActivity::class.java).apply {
             putExtra("SETS_COMPLETED", state.totalSetsCompleted)
             putExtra("EXERCISE_NAME", state.exerciseName)
@@ -316,15 +316,22 @@ class TimerActivity : AppCompatActivity(), TimerService.TimerUpdateListener {
         finish()
     }
     
+    /**
+     * Stoppt den Timer-Service und entfernt die Notification.
+     */
+    private fun stopTimerService() {
+        val serviceIntent = Intent(this, TimerService::class.java).apply {
+            action = TimerService.ACTION_STOP_TIMER
+        }
+        startService(serviceIntent)
+    }
+    
     private fun showExitConfirmationDialog() {
         AlertDialog.Builder(this)
             .setTitle(R.string.cancel_workout_title)
             .setMessage(R.string.cancel_workout_message)
             .setPositiveButton(R.string.yes) { _, _ ->
-                val serviceIntent = Intent(this, TimerService::class.java).apply {
-                    action = TimerService.ACTION_STOP_TIMER
-                }
-                startService(serviceIntent)
+                stopTimerService()
                 finish()
             }
             .setNegativeButton(R.string.no, null)

@@ -6,7 +6,7 @@ Dokumentiere hier Bugs, damit sie behoben werden können.
 
 ## Offene Bugs
 
-### ~~Bug #3: Timer-Architektur benötigt Refactoring~~
+### Bug #2: Gelöschte Standard-Übungen erscheinen wieder
 - **Status:** ✅ Behoben
 - **Seite/Datei:** TimerActivity.kt, TimerService.kt
 - **Beschreibung:** Die Timer-Implementierung hatte architektonische Schwächen
@@ -35,6 +35,17 @@ Dokumentiere hier Bugs, damit sie behoben werden können.
 ---
 
 ## Behobene Bugs
+
+### ~~Bug #9: Notification bleibt nach Workout-Ende stehen~~
+- **Status:** ✅ Behoben
+- **Seite/Datei:** TimerActivity.kt
+- **Beschreibung:** Nach Abschluss des letzten Satzes blieb die Notification in der Statusleiste
+- **Ursache:** Service wurde bei Workout-Ende nicht explizit gestoppt
+- **Lösung:** 
+  - `stopTimerService()` Methode erstellt (DRY-Prinzip)
+  - Expliziter Service-Stop in `navigateToTrackingScreen()`
+  - Service sendet `ACTION_STOP_TIMER` → Notification wird entfernt
+- **Datum:** 14.01.2026
 
 ### ~~Bug #4: Timer-Button nach Ablauf nicht klickbar~~
 - **Status:** ✅ Behoben
