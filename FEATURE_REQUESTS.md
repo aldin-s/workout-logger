@@ -32,79 +32,512 @@ Nach Analyse von Strong, Hevy und anderen erfolgreichen Apps:
 
 ---
 
-### Phase 1: Übung erstellen (Create Exercise)
+### Phase 1: Übung erstellen (Create Exercise) - DETAILLIERT
 
-#### Aktueller Flow
-```
-[Übungsname] → [Weight] → [Reps] → [Pause] → [Sets] → START
-```
+---
 
-#### Neuer Flow mit Type-Auswahl
+## 📋 Übersicht
+
+| Aspekt | Details |
+|--------|---------|
+| **Ziel** | Type-Auswahl (REPS/TIME) in Workout-Erstellung integrieren |
+| **Betroffene Dateien** | 7 Dateien (4 Kotlin, 2 XML, 1 SQL) |
+| **Geschätzter Aufwand** | 2-3 Stunden |
+| **Risiko** | Niedrig (additive Änderungen, keine Breaking Changes) |
+
+---
+
+## 🗂️ Aktuelle Codestruktur
+
+### Betroffene Dateien
+
 ```
-[Übungsname] → [Type wählen] → [Felder je nach Type] → START
+app/src/main/
+├── java/.../data/model/
+│   └── CustomExercise.kt          # ⬅️ ÄNDERN: isTimeBased hinzufügen
+├── java/.../data/dao/
+│   └── CustomExerciseDao.kt       # ⬅️ ÄNDERN: Query für TimeBased
+├── java/.../ui/workout/
+│   └── WorkoutInputActivity.kt    # ⬅️ ÄNDERN: Type-Logik
+├── res/layout/
+│   └── activity_workout_input.xml # ⬅️ ÄNDERN: Segmented Button
+└── res/values/
+    └── strings.xml                # ⬅️ ÄNDERN: Neue Strings
 ```
 
 ---
 
-#### UI Design: Type-Auswahl
+## 🔧 Änderung 1: Datenmodell (CustomExercise.kt)
 
-**Option A: Toggle/Segmented Control** ⭐ Empfohlen
-```
-┌─────────────────────────────────────────┐
-│         CREATE NEW EXERCISE             │
-├─────────────────────────────────────────┤
-│                                         │
-│  Name: [  Plank________________]        │
-│                                         │
-│  Type:                                  │
-│  ┌──────────────┬──────────────┐       │
-│  │  ● REPS     │  ○ TIME      │       │
-│  │  (Standard)  │  (Stoppuhr)  │       │
-│  └──────────────┴──────────────┘       │
-│                                         │
-└─────────────────────────────────────────┘
+### Aktueller Code
+```kotlin
+@Entity(tableName = "custom_exercises")
+data class CustomExercise(
+    @PrimaryKey
+    val name: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastUsed: Long = System.currentTimeMillis(),
+    val usageCount: Int = 0,
+    val isHidden: Boolean = false,
+    val sortOrder: Int = 0
+)
 ```
 
-**Option B: Radio Buttons**
-```
-│  Type:                                  │
-│  ◉ Rep-based (Gewicht & Wiederholungen) │
-│  ○ Time-based (Stoppuhr)                │
+### Neuer Code
+```kotlin
+@Entity(tableName = "custom_exercises")
+data class CustomExercise(
+    @PrimaryKey
+    val name: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastUsed: Long = System.currentTimeMillis(),
+    val usageCount: Int = 0,
+    val isHidden: Boolean = false,
+    val sortOrder: Int = 0,
+    val isTimeBased: Boolean = false  // NEU: Time-based Exercise
+)
 ```
 
-**Empfehlung:** Option A (Segmented Control) - moderner, platzsparender
+### Datenbank-Migration
+
+```kotlin
+// In WorkoutDatabase.kt - Migration 3 → 4
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "ALTER TABLE custom_exercises ADD COLUMN isTimeBased INTEGER NOT NULL DEFAULT 0"
+        )
+    }
+}
+```
+
+**⚠️ Wichtig:** Default `false` = bestehende Übungen bleiben Rep-based
 
 ---
 
-#### Felder je nach Type
+## 🎨 Änderung 2: Layout (activity_workout_input.xml)
 
-**REPS (Standard) - wie aktuell:**
-```
-┌─────────────────────────────────────────┐
-│  Weight:       [ 80.0 ] kg              │
-│  Repetitions:  [ 10   ]                 │
-│  Rest Time:    [ 60   ] sec             │
-│  Sets:         [ 4    ]                 │
-│                                         │
-│            [ START ]                    │
-└─────────────────────────────────────────┘
+### Neue UI-Komponente: Segmented Button
+
+**Position:** Nach der Übungsauswahl, VOR den Input-Feldern
+
+```xml
+<!-- TYPE AUSWAHL - NEU -->
+<TextView
+    android:id="@+id/typeLabel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/exercise_type_label"
+    android:textSize="12sp"
+    android:textColor="#808080"
+    android:letterSpacing="0.05"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="8dp"
+    android:visibility="gone" />
+
+<com.google.android.material.button.MaterialButtonToggleGroup
+    android:id="@+id/exerciseTypeToggle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="24dp"
+    android:visibility="gone"
+    app:singleSelection="true"
+    app:selectionRequired="true">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonTypeReps"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:text="@string/type_reps"
+        android:textSize="14sp"
+        app:strokeColor="#606060"
+        app:cornerRadius="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonTypeTime"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:text="@string/type_time"
+        android:textSize="14sp"
+        app:strokeColor="#606060"
+        app:cornerRadius="8dp" />
+
+</com.google.android.material.button.MaterialButtonToggleGroup>
+
+<!-- Info-Text für Time-based -->
+<TextView
+    android:id="@+id/timeBasedInfoText"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/time_based_info"
+    android:textSize="13sp"
+    android:textColor="#808080"
+    android:drawableStart="@android:drawable/ic_menu_info_details"
+    android:drawablePadding="8dp"
+    android:visibility="gone"
+    android:layout_marginBottom="16dp" />
 ```
 
-**TIME (neu) - vereinfacht:**
+### Visuelles Mockup
+
 ```
-┌─────────────────────────────────────────┐
-│                                         │
-│  Rest Time:    [ 45   ] sec             │
-│  Sets:         [ 3    ]                 │
-│                                         │
-│  ℹ️ Timer läuft hoch bis du             │
-│     "DONE" drückst                      │
-│                                         │
-│            [ START ]                    │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│            ÜBUNG AUSWÄHLEN                  │
+│         ─────────────────────               │
+│                                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐    │
+│  │Bankdrück │ │ Rudern   │ │  Squat   │    │
+│  └──────────┘ └──────────┘ └──────────┘    │
+│                                             │
+│  [ + NEUE ÜBUNG ]                           │
+│  ───────────────────────────────────────    │
+│                                             │
+│  Ausgewählt: Plank                          │ ← Erscheint nach Auswahl
+│                                             │
+│  Typ:                                       │ ← NEU
+│  ┌──────────────┬──────────────┐           │ ← NEU
+│  │   ● REPS    │   ○ ZEIT     │           │ ← NEU
+│  └──────────────┴──────────────┘           │ ← NEU
+│                                             │
+│  ───────── WENN REPS ─────────              │
+│                                             │
+│  Weight:       [ 80.0 ] kg                  │
+│  Repetitions:  [ 10   ]                     │
+│  Rest Time:    [ 60   ] sec                 │
+│  Sets:         [ 4    ]                     │
+│                                             │
+│  ───────── WENN ZEIT ─────────              │
+│                                             │
+│  ℹ️ Timer läuft hoch bis "FERTIG"           │ ← Info-Text
+│                                             │
+│  Rest Time:    [ 45   ] sec                 │
+│  Sets:         [ 3    ]                     │
+│                                             │
+│             [ START ]                       │
+└─────────────────────────────────────────────┘
 ```
 
-**Felder-Vergleich:**
+---
+
+## 🔄 Änderung 3: Activity-Logik (WorkoutInputActivity.kt)
+
+### Neue Properties
+
+```kotlin
+class WorkoutInputActivity : AppCompatActivity() {
+    
+    // ... bestehende Properties ...
+    
+    // NEU: Type-Auswahl
+    private lateinit var typeLabel: TextView
+    private lateinit var exerciseTypeToggle: MaterialButtonToggleGroup
+    private lateinit var buttonTypeReps: MaterialButton
+    private lateinit var buttonTypeTime: MaterialButton
+    private lateinit var timeBasedInfoText: TextView
+    
+    // NEU: State
+    private var isTimeBased: Boolean = false
+```
+
+### Neue Methoden
+
+```kotlin
+/**
+ * Zeigt Type-Toggle nach Übungsauswahl an
+ */
+private fun showTypeSelection() {
+    typeLabel.visibility = View.VISIBLE
+    exerciseTypeToggle.visibility = View.VISIBLE
+    
+    // Default: REPS ausgewählt
+    exerciseTypeToggle.check(R.id.buttonTypeReps)
+    updateFieldsForType(isTimeBased = false)
+}
+
+/**
+ * Schaltet Felder basierend auf Type um
+ */
+private fun updateFieldsForType(isTimeBased: Boolean) {
+    this.isTimeBased = isTimeBased
+    
+    if (isTimeBased) {
+        // TIME: Weight und Reps ausblenden
+        weightEditText.visibility = View.GONE
+        repsEditText.visibility = View.GONE
+        timeBasedInfoText.visibility = View.VISIBLE
+        
+        // Layout-Parent auch ausblenden (TextInputLayout)
+        (weightEditText.parent.parent as View).visibility = View.GONE
+        (repsEditText.parent.parent as View).visibility = View.GONE
+    } else {
+        // REPS: Alles anzeigen
+        (weightEditText.parent.parent as View).visibility = View.VISIBLE
+        (repsEditText.parent.parent as View).visibility = View.VISIBLE
+        timeBasedInfoText.visibility = View.GONE
+    }
+}
+
+/**
+ * Toggle-Listener Setup
+ */
+private fun setupTypeToggle() {
+    exerciseTypeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        if (isChecked) {
+            when (checkedId) {
+                R.id.buttonTypeReps -> updateFieldsForType(isTimeBased = false)
+                R.id.buttonTypeTime -> updateFieldsForType(isTimeBased = true)
+            }
+        }
+    }
+}
+```
+
+### Geänderte validateInput()
+
+```kotlin
+private fun validateInput(): Boolean {
+    val exerciseName = getExerciseName()
+    
+    when {
+        exerciseName.isEmpty() -> {
+            // ... bestehende Logik ...
+            return false
+        }
+    }
+    
+    // NUR validieren wenn REPS-Modus
+    if (!isTimeBased) {
+        val weightText = weightEditText.text.toString().trim()
+        val repsText = repsEditText.text.toString().trim()
+        
+        when {
+            weightText.isEmpty() -> {
+                weightEditText.error = getString(R.string.error_enter_weight)
+                return false
+            }
+            repsText.isEmpty() -> {
+                repsEditText.error = getString(R.string.error_enter_reps)
+                return false
+            }
+        }
+        
+        val weight = weightText.toDoubleOrNull()
+        val reps = repsText.toIntOrNull()
+        
+        when {
+            weight == null || weight <= 0 -> {
+                weightEditText.error = getString(R.string.error_weight_invalid)
+                return false
+            }
+            reps == null || reps <= 0 -> {
+                repsEditText.error = getString(R.string.error_reps_invalid)
+                return false
+            }
+        }
+    }
+    
+    // Pause und Sets immer validieren
+    val pauseTimeText = pauseTimeEditText.text.toString().trim()
+    val setsText = setsEditText.text.toString().trim()
+    
+    // ... Rest der Validierung ...
+    
+    return true
+}
+```
+
+### Geänderte startWorkout()
+
+```kotlin
+private fun startWorkout() {
+    val exerciseName = getExerciseName()
+    
+    // Werte je nach Modus
+    val weight = if (isTimeBased) 0.0 else 
+        weightEditText.text.toString().toDoubleOrNull() ?: 0.0
+    val reps = if (isTimeBased) 0 else 
+        repsEditText.text.toString().toIntOrNull() ?: 0
+    val pauseTime = pauseTimeEditText.text.toString().toIntOrNull() ?: 60
+    val totalSets = setsEditText.text.toString().toIntOrNull() ?: 1
+
+    lifecycleScope.launch {
+        // ... Übung speichern mit isTimeBased ...
+        
+        val existing = database.customExerciseDao().getExerciseByName(exerciseName)
+        
+        if (existing != null) {
+            // Update: auch isTimeBased aktualisieren falls geändert
+            database.customExerciseDao().updateExercise(
+                existing.copy(
+                    lastUsed = System.currentTimeMillis(),
+                    usageCount = existing.usageCount + 1,
+                    isTimeBased = isTimeBased  // NEU
+                )
+            )
+        } else {
+            // Neue Übung mit isTimeBased
+            database.customExerciseDao().insertExercise(
+                CustomExercise(
+                    name = exerciseName,
+                    createdAt = System.currentTimeMillis(),
+                    isTimeBased = isTimeBased  // NEU
+                )
+            )
+        }
+        
+        // Intent mit zusätzlichem Flag
+        val intent = Intent(this@WorkoutInputActivity, TimerActivity::class.java).apply {
+            putExtra("EXERCISE_NAME", exerciseName)
+            putExtra("WEIGHT", weight)
+            putExtra("REPS", reps)
+            putExtra("PAUSE_TIME", pauseTime)
+            putExtra("TOTAL_SETS", totalSets)
+            putExtra("IS_TIME_BASED", isTimeBased)  // NEU
+        }
+        
+        startActivity(intent)
+    }
+}
+```
+
+---
+
+## 📝 Änderung 4: Strings (strings.xml)
+
+```xml
+<!-- Exercise Type Selection -->
+<string name="exercise_type_label">Typ</string>
+<string name="type_reps">REPS</string>
+<string name="type_time">ZEIT</string>
+<string name="time_based_info">Timer läuft hoch bis du \"FERTIG\" drückst</string>
+
+<!-- German -->
+<string name="type_reps" translatable="true">WDHLG.</string>
+<string name="type_time" translatable="true">ZEIT</string>
+```
+
+---
+
+## 🧪 Testfälle für Phase 1
+
+### Unit Tests
+
+| Test | Beschreibung | Erwartung |
+|------|--------------|-----------|
+| `testRepsFieldsVisible` | REPS ausgewählt | Weight + Reps sichtbar |
+| `testTimeFieldsHidden` | TIME ausgewählt | Weight + Reps unsichtbar |
+| `testValidationSkipsWeightForTime` | TIME + keine Weight | Keine Fehler |
+| `testExerciseSavedWithTimeBased` | TIME Übung erstellt | `isTimeBased = true` |
+
+### UI Tests (Espresso)
+
+```kotlin
+@Test
+fun testTypeToggleSwitchesFields() {
+    // 1. Übung auswählen
+    onView(withText("Plank")).perform(click())
+    
+    // 2. Type Toggle erscheint
+    onView(withId(R.id.exerciseTypeToggle)).check(matches(isDisplayed()))
+    
+    // 3. ZEIT auswählen
+    onView(withId(R.id.buttonTypeTime)).perform(click())
+    
+    // 4. Weight-Feld verschwindet
+    onView(withId(R.id.weightEditText)).check(matches(not(isDisplayed())))
+    
+    // 5. Info-Text erscheint
+    onView(withId(R.id.timeBasedInfoText)).check(matches(isDisplayed()))
+}
+```
+
+---
+
+## 📊 Ablaufdiagramm
+
+```
+                    ┌────────────────┐
+                    │  User öffnet   │
+                    │ WorkoutInput   │
+                    └───────┬────────┘
+                            │
+                            ▼
+                    ┌────────────────┐
+                    │ Übung auswählen│
+                    │ (Grid/Button)  │
+                    └───────┬────────┘
+                            │
+                            ▼
+               ┌────────────────────────┐
+               │   Type-Toggle zeigen   │
+               │   (Default: REPS)      │
+               └───────────┬────────────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+      ┌──────────────┐          ┌──────────────┐
+      │   REPS       │          │    TIME      │
+      │   gewählt    │          │   gewählt    │
+      └──────┬───────┘          └──────┬───────┘
+             │                         │
+             ▼                         ▼
+      ┌──────────────┐          ┌──────────────┐
+      │ Zeige:       │          │ Zeige:       │
+      │ - Weight     │          │ - Info-Text  │
+      │ - Reps       │          │ - Pause      │
+      │ - Pause      │          │ - Sets       │
+      │ - Sets       │          │              │
+      └──────┬───────┘          └──────┬───────┘
+             │                         │
+             └────────────┬────────────┘
+                          ▼
+                 ┌────────────────┐
+                 │  START drücken │
+                 └───────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │  Validate Input │
+                │  (je nach Type) │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ Exercise in DB  │
+                │ speichern mit   │
+                │ isTimeBased     │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ TimerActivity   │
+                │ mit IS_TIME_    │
+                │ BASED Extra     │
+                └─────────────────┘
+```
+
+---
+
+## ✅ Akzeptanzkriterien (Phase 1)
+
+- [ ] **UI:** Segmented Control erscheint nach Übungsauswahl
+- [ ] **UI:** Default-Auswahl ist "REPS"
+- [ ] **UI:** Bei "TIME" verschwinden Weight und Reps Felder
+- [ ] **UI:** Info-Text erscheint bei "TIME"
+- [ ] **DB:** `isTimeBased` Spalte existiert (Migration)
+- [ ] **DB:** Neue Übungen speichern `isTimeBased` korrekt
+- [ ] **Intent:** `IS_TIME_BASED` wird an TimerActivity übergeben
+- [ ] **Validation:** Weight/Reps werden bei TIME nicht validiert
+- [ ] **Tests:** Alle Unit Tests grün
+- [ ] **Tests:** UI Tests bestehen
+
+---
+
+## ⏱️ Felder-Vergleich
 
 | Feld | REPS | TIME |
 |------|------|------|
