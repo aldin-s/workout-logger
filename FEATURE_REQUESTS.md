@@ -699,6 +699,64 @@ TIME-BASED WORKFLOW:
 
 ---
 
+## ✅ Geklärte Entscheidungen
+
+### Product Owner Entscheidungen
+
+| # | Frage | Entscheidung | Begründung |
+|---|-------|--------------|------------|
+| 1 | Pause-Button während Stoppuhr? | ❌ **Nein** | Offen (noch zu klären) |
+| 2 | Mindestzeit für Satz? | **1 Sekunde** | Verhindert Fehlklicks |
+| 3 | Versehentlich "FERTIG" gedrückt? | **Undo-Toast (5 Sek)** | Schneller als Dialog |
+| 4 | Personal Best Scope? | **All-Time** | Motivierender |
+| 5 | Sound/Vibration bei TIME? | ❌ **Nein** | Erstmal simpel halten |
+
+### UX Entscheidungen
+
+| # | Frage | Entscheidung | Begründung |
+|---|-------|--------------|------------|
+| 6 | Timer-Farbe bei TIME anders? | ❌ **Nein, gleich** | Konsistentes Design |
+| 7 | Animation bei Personal Best? | ❌ **Nein** | Simpel halten |
+| 8 | Haptic Feedback bei Satz-Ende? | ❌ **Nein** | Nicht nötig |
+| 9 | "Letzter" und "Best" wann anzeigen? | **Immer (wenn vorhanden)** | Ab 1. Satz wenn History existiert |
+
+### Technische Entscheidungen
+
+| # | Frage | Entscheidung | Begründung |
+|---|-------|--------------|------------|
+| 10 | Type einer Übung änderbar? | **Ja** | Flexibilität, History bleibt getrennt |
+| 11 | durationSeconds Datentyp? | **Int** | 2.1 Mrd Sekunden = 68 Jahre, reicht |
+| 12 | CompletedSet weight/reps nullable? | **Ja (Phase 2)** | Für TIME: weight=null, reps=null |
+
+---
+
+### UI Mockup: "Letzter" und "Best" Anzeige
+
+```
+┌─────────────────────────────────────────┐
+│                PLANK                    │
+│            ─────────────                │
+│                                         │
+│              00:47                      │
+│            (Stoppuhr ↑)                 │
+│                                         │
+│             Satz 1/3                    │
+│                                         │
+│  Letzter: 0:42  │  Best: 0:51          │ ← Zeigt History-Werte
+│  (vom letzten   │  (All-Time           │    falls vorhanden
+│   Workout)      │   Record)            │
+│                                         │
+│         [ ✓ SATZ FERTIG ]               │
+└─────────────────────────────────────────┘
+```
+
+**Logik:**
+- **Letzter:** Letzter Satz dieser Übung (Session oder vorheriges Workout)
+- **Best:** All-Time Personal Best für diese Übung
+- **Keine Daten:** Bereich ausblenden oder "—" anzeigen
+
+---
+
 ## 🔋 Screen Wake Management (Time-Based)
 
 ### Problem
