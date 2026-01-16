@@ -8,6 +8,11 @@
     <color name="buttonColor">#FFFFFF</color>
     <color name="buttonTextColor">#121212</color>
     
+    <!-- Dark Theme Core Colors -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_surface">#1E1E1E</color>
+    <color name="text_secondary">#808080</color>
+    
     <!-- Dark Mode Grayscale -->
     <color name="purple_200">#808080</color>
     <color name="purple_500">#FFFFFF</color>

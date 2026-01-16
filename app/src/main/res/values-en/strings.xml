@@ -96,12 +96,6 @@
     <string name="settings_data">Data</string>
     <string name="settings_about">About REPS</string>
     
-    <!-- Theme -->
-    <string name="theme_title">Theme</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_dark">Dark</string>
-    <string name="theme_auto">Auto</string>
-    
     <!-- Settings - Notifications -->
     <string name="vibration_on_timer_end">Vibration on timer end</string>
     <string name="vibration_duration">Vibration duration</string>
