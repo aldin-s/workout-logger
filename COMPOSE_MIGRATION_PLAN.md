@@ -1135,6 +1135,10 @@ Phase 9 setzt voraus:
 | 17.01.2026 | Phase 3 (History) komplett | WorkoutHistoryActivity → ComponentActivity, EditWorkoutBottomSheet Fragment → Compose ModalBottomSheet |
 | 17.01.2026 | Brutalistisches Monochrom-Design | Alle Farben zentral in Color.kt, primary=Weiß, keine blauen Akzente, dynamicColor=false |
 | 17.01.2026 | Phase 7+9 komplett | Hilt DI integriert, TimerRepository implementiert, WakeLock + Back-Handler für Zuverlässigkeit |
+| 18.01.2026 | Multi-Activity statt Navigation Compose | RepsNavHost.kt + Routes.kt gelöscht - Multi-Activity ist simpler, funktioniert mit Foreground Service |
+| 18.01.2026 | Alle XML-Layouts gelöscht | 5 Layouts (activity_timer, activity_tracking, dialog_edit_workout, item_date_header, empty_state_history) entfernt |
+| 18.01.2026 | Stabile Übungs-Lokalisierung | nameResKey statt nameResId - R.string IDs sind nicht stabil zwischen Builds |
+| 18.01.2026 | Phase 8 (Cleanup) abgeschlossen | Unused Code gelöscht, Migration 100% komplett |
 
 ---
 
@@ -1142,28 +1146,28 @@ Phase 9 setzt voraus:
 
 | Risiko | Wahrscheinlichkeit | Mitigation |
 |--------|-------------------|------------|
-| Längere Build-Zeiten | Hoch | Compose Compiler Cache nutzen |
-| Lernkurve | Mittel | Codelabs durcharbeiten, klein anfangen |
-| Breaking Changes | Niedrig | Compose BOM für konsistente Versionen |
-| Regressions | Mittel | Alte Screens parallel halten bis migriert |
+| ~~Längere Build-Zeiten~~ | ~~Hoch~~ | ~~Compose Compiler Cache nutzen~~ → Kein Problem: ~50s Build |
+| ~~Lernkurve~~ | ~~Mittel~~ | Abgeschlossen ✅ |
+| ~~Breaking Changes~~ | ~~Niedrig~~ | Compose BOM für konsistente Versionen ✅ |
+| ~~Regressions~~ | ~~Mittel~~ | Alle alten Screens gelöscht ✅ |
 
 ---
 
-## 🏁 Nächste Schritte
+## 🏁 Abgeschlossen
 
 1. ✅ Time-Based Feature mit XML fertigstellen
-2. ✅ **Phase 0:** Compose Setup + Navigation Shell
+2. ✅ **Phase 0:** Compose Setup + Theme
 3. ❌ ~~**Phase 1:** Stats Screen~~ - Entfernt (16.01.2026)
-4. ✅ **Phase 4:** Main Screen - Komplett
-5. ✅ **Phase 3:** History Screen - Komplett
-6. ✅ **Phase 2:** Settings Screen - Komplett
-7. ✅ **Phase 5:** WorkoutInput Screen - Komplett
-8. ✅ **Phase 6:** Timer Screen (100%) - Foreground Service + Back-Handler
-9. ✅ **Phase 7:** Hilt Integration - Komplett
-10. ⏳ **Phase 8:** Cleanup & Polish
-11. ✅ **Phase 9:** v2.0 Architektur-Verbesserungen - Komplett (Core Features)
+4. ✅ **Phase 4:** Main Screen
+5. ✅ **Phase 3:** History Screen
+6. ✅ **Phase 2:** Settings Screen
+7. ✅ **Phase 5:** WorkoutInput Screen
+8. ✅ **Phase 6:** Timer Screen + Foreground Service
+9. ✅ **Phase 7:** Hilt Integration
+10. ✅ **Phase 8:** Cleanup & Polish
+11. ✅ **Phase 9:** v2.0 Architektur-Verbesserungen
 
-> 💡 **Anpassung 17.01.2026:** Phase 7 + 9 komplett. Nur noch Phase 8 (Cleanup) offen.
+> 🎉 **18.01.2026:** Migration 100% abgeschlossen!
 
 ---
 
@@ -1171,7 +1175,7 @@ Phase 9 setzt voraus:
 
 | Phase | Fortschritt | Notizen |
 |-------|-------------|--------|
-| 0 | ⬛⬛⬛⬛⬛ 100% | Theme + Navigation Shell ✅ |
+| 0 | ⬛⬛⬛⬛⬛ 100% | Theme erstellt, Compose Dependencies ✅ |
 | 1 | ❌ Entfernt | Stats-Feature nicht mehr benötigt |
 | 2 | ⬛⬛⬛⬛⬛ 100% | SettingsScreen + ViewModel + Activity + monochrome Switches ✅ |
 | 3 | ⬛⬛⬛⬛⬛ 100% | HistoryScreen + EditWorkoutSheet + monochrome Volumen-Anzeige ✅ |
@@ -1179,10 +1183,27 @@ Phase 9 setzt voraus:
 | 5 | ⬛⬛⬛⬛⬛ 100% | WorkoutInputScreen + ViewModel + imePadding für Keyboard ✅ |
 | 6 | ⬛⬛⬛⬛⬛ 100% | TimerScreen + TimerService + Back-Handler + WakeLock ✅ |
 | 7 | ⬛⬛⬛⬛⬛ 100% | Hilt DI: RepsApplication, DatabaseModule, RepositoryModule ✅ |
-| 8 | ⬜⬜⬜⬜⬜ 0% | Cleanup & Polish - wartend |
-| 9 | ⬛⬛⬛⬛⬜ 80% | v2.0: TimerRepository, WakeLock, Back-Handler, Error Handling ✅ |
+| 8 | ⬛⬛⬛⬛⬛ 100% | RepsNavHost, Routes.kt, 5 XML-Layouts gelöscht ✅ |
+| 9 | ⬛⬛⬛⬛⬛ 100% | TimerRepository, WakeLock, Back-Handler, Error Handling ✅ |
 
 ---
 
-*Letzte Aktualisierung: 17.01.2026*  
-*Review: Senior Android Developer ✅*
+## 🏆 Architektur-Entscheidung: Multi-Activity vs. Navigation Compose
+
+**Entscheidung (18.01.2026):** Multi-Activity-Architektur beibehalten
+
+| Aspekt | Multi-Activity | Navigation Compose |
+|--------|----------------|-------------------|
+| **Foreground Service** | ✅ Natürliche Integration | ⚠️ Komplexere Lifecycle-Behandlung |
+| **Komplexität** | ✅ Einfacher | ⚠️ Mehr Boilerplate |
+| **Status** | ✅ Funktioniert bereits | ❌ Müsste neu implementiert werden |
+| **State Recovery** | ✅ Android-Standard | ⚠️ SavedStateHandle nötig |
+
+**Gelöschte Dateien:**
+- `ui/navigation/RepsNavHost.kt` - War nur Platzhalter, nie verwendet
+- `ui/navigation/Routes.kt` - Ungenutzte Route-Konstanten
+
+---
+
+*Letzte Aktualisierung: 18.01.2026*  
+*Migration abgeschlossen! 🎉*
