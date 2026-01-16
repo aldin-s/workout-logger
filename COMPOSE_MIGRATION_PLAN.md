@@ -1,0 +1,1006 @@
+# 🚀 Jetpack Compose Migration Plan
+
+> **Erstellt:** 14.01.2026  
+> **Status:** 📋 Geplant  
+> **Priorität:** Nach Time-Based Feature
+
+---
+
+## 📋 Übersicht
+
+Dieses Dokument beschreibt die schrittweise Migration von XML-Layouts zu Jetpack Compose für die REPS Workout-Tracker App.
+
+### Aktuelle Architektur
+- **UI:** XML Layouts + View Binding
+- **Navigation:** Intent + startActivity
+- **DI:** Manuell
+- **State:** ViewModel + StateFlow ✅ (bereits modern)
+
+### Ziel-Architektur
+- **UI:** Jetpack Compose
+- **Navigation:** Navigation Compose (String Routes - stabil seit 2021)
+- **DI:** Hilt
+- **State:** ViewModel + StateFlow (bleibt)
+
+---
+
+## 📅 Phasen-Übersicht
+
+| Phase | Beschreibung | Dauer | Komplexität | Status |
+|-------|--------------|-------|-------------|--------|
+| **0** | Setup + Theme + Navigation Shell | 2 Tage | 🟢 Niedrig | ⏳ Wartend |
+| **1** | Stats Screen (Pilot) | 3 Tage | 🟢 Niedrig | ⏳ Wartend |
+| **2** | Settings Screen | 2 Tage | 🟢 Niedrig | ⏳ Wartend |
+| **3** | History Screen | 3 Tage | 🟡 Mittel | ⏳ Wartend |
+| **4** | Main/Dashboard Screen | 3 Tage | 🟡 Mittel | ⏳ Wartend |
+| **5** | WorkoutInput Screen | 5 Tage | 🔴 Hoch | ⏳ Wartend |
+| **6** | Timer Screen | 4 Tage | 🔴 Hoch | ⏳ Wartend |
+| **7** | Hilt Integration | 3 Tage | 🟡 Mittel | ⏳ Wartend |
+| **8** | Cleanup & Polish | 3 Tage | 🟢 Niedrig | ⏳ Wartend |
+
+**Geschätzte Gesamtdauer:** 6-8 Wochen (bei Teilzeit-Entwicklung)
+
+> ⚠️ **Hinweis:** Zeitschätzungen inkludieren Lernzeit für Compose-Einsteiger.
+
+### Reihenfolge-Begründung
+
+| Prinzip | Erklärung |
+|---------|------------|
+| **Einfach → Komplex** | Stats (read-only) vor WorkoutInput (Formulare) |
+| **Navigation früh** | Vermeidet doppelte Arbeit mit Bridge-Activities |
+| **Service-bound zuletzt** | Timer mit Foreground Service ist am komplexesten |
+| **Hilt nach Screens** | DI-Migration ist invasiv, separate Phase |
+
+---
+
+## 🔧 Phase 0: Vorbereitung & Setup + Navigation Shell
+
+### 0.0 Interop-Strategie (XML ↔ Compose)
+
+Während der Migration existieren beide UI-Systeme parallel:
+
+```kotlin
+// Compose in XML-Activity einbetten
+class OldActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        setContentView(R.layout.activity_old)
+        
+        val composeView = findViewById<ComposeView>(R.id.compose_container)
+        composeView.setContent {
+            RepsTheme {
+                NewComposeComponent()
+            }
+        }
+    }
+}
+
+// XML in Compose einbetten (selten nötig)
+@Composable
+fun LegacyViewWrapper() {
+    AndroidView(
+        factory = { context ->
+            OldCustomView(context)
+        },
+        update = { view ->
+            view.updateData(newData)
+        }
+    )
+}
+```
+
+**Regeln:**
+- ✅ Neue Screens: Compose
+- ✅ Neue Komponenten in alten Screens: ComposeView
+- ❌ Keine halben Screen-Migrationen (ganz oder gar nicht)
+
+---
+
+### 0.1 Gradle Dependencies hinzufügen
+
+**app/build.gradle:**
+```gradle
+android {
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"
+    }
+}
+
+dependencies {
+    // Compose BOM (Bill of Materials) - vereinfacht Versionierung
+    def composeBom = platform('androidx.compose:compose-bom:2024.02.00')
+    implementation composeBom
+    androidTestImplementation composeBom
+    
+    // Core Compose
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    
+    // Activity Compose Integration
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    
+    // ViewModel Compose
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
+    
+    // Navigation Compose (stabil seit 2021)
+    implementation 'androidx.navigation:navigation-compose:2.7.7'
+    
+    // Debug Tools
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    
+    // Testing
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+}
+```
+
+### 0.2 Theme erstellen
+
+**Datei:** `ui/theme/Theme.kt`
+```kotlin
+@Composable
+fun RepsTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = Color(0xFF90CAF9),      // Blau
+            secondary = Color(0xFF80CBC4),
+            background = Color(0xFF121212),
+            surface = Color(0xFF1E1E1E)
+        )
+    } else {
+        lightColorScheme(
+            primary = Color(0xFF1976D2),
+            secondary = Color(0xFF26A69A),
+            background = Color(0xFFF5F5F5),
+            surface = Color.White
+        )
+    }
+    
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = RepsTypography,
+        content = content
+    )
+}
+```
+
+### 0.3 Navigation Shell vorbereiten
+
+```kotlin
+// RepsNavHost.kt - Leere Shell, wird pro Phase gefüllt
+@Composable
+fun RepsNavHost(
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = "stats" // Erster Compose-Screen
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        // Phase 1: Stats
+        composable("stats") {
+            StatsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        
+        // Phase 2-6: Weitere Screens hier ergänzen
+    }
+}
+```
+
+---
+
+### 0.4 Checkliste Phase 0
+
+- [x] Compose Dependencies in build.gradle
+- [x] Sync & Build erfolgreich
+- [x] Theme.kt erstellt
+- [x] Color.kt erstellt  
+- [x] Typography.kt erstellt
+- [x] Erster @Preview funktioniert
+- [x] Navigation Compose Dependency
+- [x] RepsNavHost.kt Shell erstellt
+- [ ] ComposeView in XML getestet (Interop)
+- [x] **Tests:** Build-Zeit gemessen (Baseline: ~9s inkrementell, ~2min clean)
+
+---
+
+## 📊 Phase 1: Erster Compose Screen (Stats/Statistik)
+
+### Warum Stats zuerst?
+- Neuer Screen (kein Refactoring nötig)
+- Read-Only (keine komplexe Logik)
+- Perfekt zum Lernen
+
+### 1.1 Screen-Struktur
+
+```
+ui/
+  stats/
+    StatsScreen.kt          // Main Composable
+    StatsViewModel.kt       // State Management
+    components/
+      StatCard.kt           // Wiederverwendbare Komponente
+      WorkoutChart.kt       // Diagramm-Komponente
+```
+
+### 1.2 StatsScreen Skeleton
+
+```kotlin
+@Composable
+fun StatsScreen(
+    viewModel: StatsViewModel = viewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Statistiken") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        when (val state = uiState) {
+            is StatsUiState.Loading -> LoadingIndicator()
+            is StatsUiState.Success -> StatsContent(state, Modifier.padding(padding))
+            is StatsUiState.Error -> ErrorMessage(state.message)
+        }
+    }
+}
+
+@Composable
+private fun StatsContent(
+    state: StatsUiState.Success,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        item {
+            StatCard(
+                title = "Workouts diese Woche",
+                value = state.weeklyWorkouts.toString(),
+                icon = Icons.Default.FitnessCenter
+            )
+        }
+        item {
+            StatCard(
+                title = "Gesamtgewicht",
+                value = "${state.totalWeight} kg",
+                icon = Icons.Default.Scale
+            )
+        }
+        // Weitere Stats...
+    }
+}
+```
+
+### 1.3 Integration in bestehende App
+
+```kotlin
+// In MainActivity oder Navigation
+Button(onClick = {
+    // Temporär: Mixed Navigation (XML → Compose)
+    startActivity(Intent(this, StatsActivity::class.java))
+}) {
+    Text("Statistiken")
+}
+
+// StatsActivity.kt (Bridge)
+class StatsActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            RepsTheme {
+                StatsScreen(
+                    onNavigateBack = { finish() }
+                )
+            }
+        }
+    }
+}
+```
+
+### 1.4 Checkliste Phase 1
+
+- [x] StatsViewModel.kt erstellt
+- [x] StatsUiState.kt (Sealed Class) erstellt
+- [x] StatsScreen.kt erstellt
+- [x] StatCard.kt Komponente erstellt
+- [x] @Preview für alle Composables
+- [x] In RepsNavHost registriert
+- [x] Navigation von Main → Stats funktioniert (Bridge Activity)
+- [ ] Dunkelmodus getestet
+- [ ] **Tests:** StatsViewModelTest.kt
+- [ ] **Tests:** StatsScreenTest.kt (Compose Testing)
+- [ ] **Review:** Code Review durchgeführt
+
+> ⚠️ **Issue gelöst:** Extended Material Icons durch Standard Icons ersetzt (siehe `migration_nach_compose_issues.md`)
+
+---
+
+## ⚙️ Phase 2: Settings Screen
+
+### 2.1 Komponenten
+
+```
+ui/
+  settings/
+    SettingsScreen.kt
+    components/
+      SettingsItem.kt
+      LanguageSelector.kt
+      ThemeSelector.kt
+```
+
+### 2.2 SettingsScreen Beispiel
+
+```kotlin
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel = viewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.settings)) },
+                navigationIcon = { BackButton(onNavigateBack) }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            item {
+                SettingsSection(title = "Allgemein") {
+                    LanguageSettingsItem(
+                        currentLanguage = settings.language,
+                        onLanguageChange = viewModel::setLanguage
+                    )
+                    ThemeSettingsItem(
+                        currentTheme = settings.theme,
+                        onThemeChange = viewModel::setTheme
+                    )
+                }
+            }
+            
+            item {
+                SettingsSection(title = "Timer") {
+                    SliderSettingsItem(
+                        title = "Standard-Pausenzeit",
+                        value = settings.defaultRestTime,
+                        range = 30f..300f,
+                        onValueChange = viewModel::setDefaultRestTime
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
+### 2.3 Checkliste Phase 2
+
+- [ ] SettingsViewModel.kt erstellt
+- [ ] SettingsScreen.kt erstellt
+- [ ] SettingsItem Komponenten erstellt
+- [ ] Sprache-Wechsel funktioniert
+- [ ] Theme-Wechsel funktioniert
+- [ ] In RepsNavHost registriert
+- [ ] Alte SettingsActivity gelöscht
+- [ ] **Tests:** SettingsViewModelTest.kt
+- [ ] **Tests:** SettingsScreenTest.kt
+- [ ] **Review:** Code Review durchgeführt
+
+---
+
+## 📜 Phase 3: History Screen
+
+### 3.1 Warum History vor WorkoutInput?
+- Mittlere Komplexität (Liste + Interaktion)
+- Gute Übung für LazyColumn + State
+- Kein komplexes Formular-Handling
+
+### 3.2 Komponenten
+
+```
+ui/
+  history/
+    HistoryScreen.kt
+    HistoryViewModel.kt
+    components/
+      WorkoutHistoryItem.kt
+      DateHeader.kt
+      FilterChips.kt
+      SwipeToDelete.kt
+```
+
+### 3.3 HistoryScreen mit Gruppierung
+
+```kotlin
+@Composable
+fun HistoryScreen(
+    viewModel: HistoryViewModel = viewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Verlauf") },
+                navigationIcon = { BackButton(onNavigateBack) },
+                actions = {
+                    FilterChipsRow(viewModel::setFilter)
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.padding(padding),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            uiState.workoutsByDate.forEach { (date, workouts) ->
+                stickyHeader {
+                    DateHeader(date = date)
+                }
+                items(
+                    items = workouts,
+                    key = { it.id }
+                ) { workout ->
+                    SwipeToDeleteContainer(
+                        onDelete = { viewModel.deleteWorkout(workout.id) }
+                    ) {
+                        WorkoutHistoryItem(workout = workout)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### 3.4 Checkliste Phase 3
+
+- [ ] HistoryViewModel.kt erstellt
+- [ ] HistoryScreen.kt erstellt
+- [ ] LazyColumn mit stickyHeader
+- [ ] Gruppierung nach Datum
+- [ ] Filter-Funktionalität
+- [ ] Swipe-to-Delete
+- [ ] In RepsNavHost registriert
+- [ ] Alte HistoryActivity gelöscht
+- [ ] **Tests:** HistoryViewModelTest.kt
+- [ ] **Tests:** HistoryScreenTest.kt
+- [ ] **Review:** Code Review durchgeführt
+
+---
+
+## 🏠 Phase 4: Main/Dashboard Screen
+
+### 4.1 Komponenten
+
+```
+ui/
+  main/
+    MainScreen.kt
+    MainViewModel.kt
+    components/
+      QuickStartCard.kt
+      RecentWorkoutsList.kt
+      StreakBadge.kt
+```
+
+### 4.2 MainScreen als zentraler Hub
+
+```kotlin
+@Composable
+fun MainScreen(
+    viewModel: MainViewModel = viewModel(),
+    onNavigateToWorkout: () -> Unit,
+    onNavigateToStats: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("REPS") },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, "Einstellungen")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToWorkout,
+                icon = { Icon(Icons.Default.Add, null) },
+                text = { Text("Neues Workout") }
+            )
+        }
+    ) { padding ->
+        LazyColumn(modifier = Modifier.padding(padding)) {
+            item {
+                QuickStartCard(
+                    lastExercise = uiState.lastExercise,
+                    onQuickStart = { viewModel.quickStart(it) }
+                )
+            }
+            item {
+                RecentWorkoutsSection(
+                    workouts = uiState.recentWorkouts,
+                    onViewAll = onNavigateToHistory
+                )
+            }
+        }
+    }
+}
+```
+
+### 4.3 Checkliste Phase 4
+
+- [ ] MainScreen.kt erstellt
+- [ ] MainViewModel.kt erstellt
+- [ ] QuickStart Funktionalität
+- [ ] Letzte Workouts anzeigen
+- [ ] Navigation zu allen Screens
+- [ ] Als startDestination in NavHost
+- [ ] Alte MainActivity gelöscht
+- [ ] **Tests:** MainViewModelTest.kt
+- [ ] **Tests:** MainScreenTest.kt
+- [ ] **Review:** Code Review durchgeführt
+
+---
+
+## 🏋️ Phase 5: WorkoutInput Screen (Komplex)
+
+### 5.1 Warum so spät?
+Dies ist der **komplexeste Screen** mit:
+- Exercise Type Selector (REPS/TIME)
+- Dynamische Input-Felder
+- Suggestion Chips
+- Formular-Validierung
+- Keyboard-Handling
+
+> ⚠️ Erst nach Compose-Erfahrung aus Phase 1-4 angehen!
+
+### 5.2 Komponenten
+
+```
+ui/
+  workout/
+    input/
+      WorkoutInputScreen.kt
+      WorkoutInputViewModel.kt
+      components/
+        ExerciseTypeSelector.kt
+        RepsWeightInput.kt
+        TimeInput.kt
+        SuggestionChips.kt
+        ExerciseDropdown.kt
+```
+
+### 5.3 ExerciseTypeSelector (Material 3)
+
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExerciseTypeSelector(
+    selectedType: ExerciseType,
+    onTypeSelected: (ExerciseType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        SegmentedButton(
+            selected = selectedType == ExerciseType.Reps,
+            onClick = { onTypeSelected(ExerciseType.Reps) },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+            icon = { Icon(Icons.Default.Repeat, null) }
+        ) {
+            Text("Wiederholungen")
+        }
+        SegmentedButton(
+            selected = selectedType == ExerciseType.Time,
+            onClick = { onTypeSelected(ExerciseType.Time) },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+            icon = { Icon(Icons.Default.Timer, null) }
+        ) {
+            Text("Zeit")
+        }
+    }
+}
+```
+
+### 5.4 Checkliste Phase 5
+
+- [ ] WorkoutInputViewModel.kt erstellt
+- [ ] ExerciseType Sealed Class
+- [ ] ExerciseTypeSelector.kt
+- [ ] Dynamische Inputs (Reps vs Time)
+- [ ] Suggestion Chips
+- [ ] Formular-Validierung
+- [ ] Keyboard-Handling (ImeAction)
+- [ ] In RepsNavHost registriert
+- [ ] Alte WorkoutInputActivity gelöscht
+- [ ] **Tests:** WorkoutInputViewModelTest.kt
+- [ ] **Tests:** WorkoutInputScreenTest.kt
+- [ ] **Review:** Code Review durchgeführt
+
+---
+
+## ⏱️ Phase 6: Timer Screen (Service-bound)
+
+### 6.1 Warum zuletzt?
+Der Timer ist der **technisch anspruchsvollste Screen**:
+- Foreground Service Anbindung
+- Zwei Modi: Countdown (REPS) / Stopwatch (TIME)
+- Screen Wake Lock
+- Notification Updates
+- Process Death Handling
+
+> ⚠️ Compose-Erfahrung aus allen vorherigen Phasen nutzen!
+
+### 6.2 Komponenten
+
+```
+ui/
+  timer/
+    TimerScreen.kt
+    TimerViewModel.kt          // bereits vorhanden ✅
+    components/
+      TimerDisplay.kt
+      SetProgressIndicator.kt
+      TimerControls.kt
+```
+
+### 4.3 TimerScreen Beispiel
+
+```kotlin
+@Composable
+fun TimerScreen(
+    viewModel: TimerViewModel = viewModel(),
+    onWorkoutComplete: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // Screen Wake Lock
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as Activity).window
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+    
+    // Back-Handler mit Bestätigung
+    var showCancelDialog by remember { mutableStateOf(false) }
+    BackHandler { showCancelDialog = true }
+    
+    Scaffold { padding ->
+        when (val state = uiState) {
+            is TimerUiState.Loading -> LoadingIndicator()
+            is TimerUiState.Running -> TimerContent(
+                state = state,
+                onSetComplete = viewModel::completeSet,
+                modifier = Modifier.padding(padding)
+            )
+            is TimerUiState.WorkoutCompleted -> {
+                LaunchedEffect(Unit) { onWorkoutComplete() }
+            }
+            is TimerUiState.Error -> ErrorScreen(state.message)
+        }
+    }
+    
+    if (showCancelDialog) {
+        CancelWorkoutDialog(
+            onConfirm = onCancel,
+            onDismiss = { showCancelDialog = false }
+        )
+    }
+}
+```
+
+### 6.4 Checkliste Phase 6
+
+- [ ] TimerScreen.kt erstellt
+- [ ] TimerDisplay Komponente (Countdown + Stopwatch)
+- [ ] SetProgressIndicator Komponente
+- [ ] Service-Integration (bindService in LaunchedEffect)
+- [ ] Screen Wake Lock (DisposableEffect)
+- [ ] Back-Handler mit Bestätigungs-Dialog
+- [ ] In RepsNavHost registriert
+- [ ] Alte TimerActivity gelöscht
+- [ ] **Tests:** TimerViewModelTest.kt (bereits vorhanden ✅)
+- [ ] **Tests:** TimerScreenTest.kt
+- [ ] **Review:** Service-Lifecycle geprüft
+
+---
+
+## 💉 Phase 7: Hilt Integration
+
+### 7.1 NavHost Setup (String Routes - Stabil)
+
+```kotlin
+@Composable
+fun RepsNavHost(
+    navController: NavHostController = rememberNavController()
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "main"
+    ) {
+        composable("main") {
+            MainScreen(
+                onNavigateToWorkout = { navController.navigate("workout") },
+                onNavigateToStats = { navController.navigate("stats") },
+                onNavigateToHistory = { navController.navigate("history") },
+                onNavigateToSettings = { navController.navigate("settings") }
+            )
+        }
+        composable("workout") {
+            WorkoutInputScreen(
+                onNavigateToTimer = { exerciseId, sets, isTimeBased ->
+                    navController.navigate("timer/$exerciseId/$sets/$isTimeBased")
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = "timer/{exerciseId}/{sets}/{isTimeBased}",
+            arguments = listOf(
+                navArgument("exerciseId") { type = NavType.LongType },
+                navArgument("sets") { type = NavType.IntType },
+                navArgument("isTimeBased") { type = NavType.BoolType }
+            )
+        ) { backStackEntry ->
+            TimerScreen(
+                exerciseId = backStackEntry.arguments?.getLong("exerciseId") ?: 0,
+                sets = backStackEntry.arguments?.getInt("sets") ?: 3,
+                isTimeBased = backStackEntry.arguments?.getBoolean("isTimeBased") ?: false,
+                onWorkoutComplete = { 
+                    navController.navigate("main") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                },
+                onCancel = { navController.popBackStack() }
+            )
+        }
+        composable("stats") {
+            StatsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable("history") {
+            HistoryScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable("settings") {
+            SettingsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+    }
+}
+```
+
+### 7.2 Checkliste Phase 7
+
+- [ ] Navigation Routes als Konstanten definiert
+- [ ] NavHost implementiert
+- [ ] Argument-Passing funktioniert
+- [ ] Deep Links (optional)
+- [ ] Alle startActivity() entfernt
+
+---
+
+### 7.1 Warum nach allen Screens?
+Hilt-Integration ist **invasiv** und betrifft alle ViewModels. Besser nach der UI-Migration.
+
+### 7.2 Dependencies
+
+```gradle
+plugins {
+    id 'com.google.dagger.hilt.android'
+    id 'com.google.devtools.ksp'
+}
+
+dependencies {
+    implementation 'com.google.dagger:hilt-android:2.50'
+    ksp 'com.google.dagger:hilt-compiler:2.50'
+    implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
+}
+```
+
+### 8.2 Application Setup
+
+```kotlin
+@HiltAndroidApp
+class RepsApplication : Application()
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "workout_database"
+        ).build()
+    }
+    
+    @Provides
+    fun provideExerciseDao(database: AppDatabase): ExerciseDao {
+        return database.exerciseDao()
+    }
+}
+```
+
+### 8.3 ViewModel mit Hilt
+
+```kotlin
+@HiltViewModel
+class WorkoutInputViewModel @Inject constructor(
+    private val exerciseRepository: ExerciseRepository,
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    // ...
+}
+
+// In Composable
+@Composable
+fun WorkoutInputScreen(
+    viewModel: WorkoutInputViewModel = hiltViewModel()  // statt viewModel()
+) {
+    // ...
+}
+```
+
+### 7.4 Checkliste Phase 7
+
+- [ ] Hilt Dependencies hinzugefügt
+- [ ] @HiltAndroidApp in Application
+- [ ] DatabaseModule erstellt
+- [ ] RepositoryModule erstellt
+- [ ] UseCaseModule erstellt (optional)
+- [ ] Alle ViewModels auf @HiltViewModel
+- [ ] hiltViewModel() in allen Composables
+- [ ] **Tests:** Hilt Testing Setup
+- [ ] **Tests:** Alle Tests grün nach Umstellung
+
+---
+
+## 🧹 Phase 8: Cleanup & Polish
+
+### 8.1 Aufräumen
+
+- [ ] Alle XML Layout-Dateien gelöscht
+- [ ] Alle alten Activities gelöscht
+- [ ] View Binding Dependencies entfernt
+- [ ] Ungenutzte Imports entfernt
+- [ ] Code-Formatierung (ktlint)
+
+### 8.2 Testing
+
+- [ ] Compose UI Tests für kritische Flows
+- [ ] Screenshot Tests (Paparazzi)
+- [ ] Accessibility Tests (TalkBack)
+- [ ] Performance Profiling (Baseline Profiles)
+- [ ] Regressionstests (manuell)
+
+### 8.3 Dokumentation
+
+- [ ] README.md aktualisiert
+- [ ] Architecture.md erstellt
+- [ ] Code-Kommentare geprüft
+
+---
+
+## 📚 Lernressourcen
+
+### Offizielle Dokumentation
+- [Jetpack Compose Basics](https://developer.android.com/jetpack/compose/tutorial)
+- [State in Compose](https://developer.android.com/jetpack/compose/state)
+- [Navigation Compose](https://developer.android.com/jetpack/compose/navigation)
+- [Material 3 Components](https://developer.android.com/jetpack/compose/designsystems/material3)
+
+### Codelabs
+- [Compose Basics Codelab](https://developer.android.com/codelabs/jetpack-compose-basics)
+- [State in Compose Codelab](https://developer.android.com/codelabs/jetpack-compose-state)
+- [Navigation Codelab](https://developer.android.com/codelabs/jetpack-compose-navigation)
+
+### Videos
+- [Now in Android (Sample App)](https://github.com/android/nowinandroid)
+- [Compose Camp on YouTube](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc94tpHND8pW8Qt8ZfT1a4cq)
+
+---
+
+## 🎯 Erfolgskriterien
+
+| Kriterium | Ziel | Messmethode |
+|-----------|------|-------------|
+| **Build-Zeit** | Max. 20% langsamer | Gradle Build Scan |
+| **APK-Größe** | Max. 2MB größer | APK Analyzer |
+| **Performance** | 60 FPS auf allen Screens | Android Profiler |
+| **Code-Reduktion** | Min. 30% weniger UI-Code | Zeilen-Vergleich |
+| **Test-Abdeckung** | 80%+ für ViewModels | JaCoCo |
+| **Crash-Rate** | 0 neue Crashes | Firebase Crashlytics |
+| **Zeitplan** | ≤ 8 Wochen | Projektboard |
+
+---
+
+## 📝 Entscheidungslog
+
+| Datum | Entscheidung | Begründung |
+|-------|--------------|------------|
+| 14.01.2026 | XML für Time-Based Feature | Schnelle Lieferung, Compose später |
+| 14.01.2026 | Stats Screen als Pilot | Niedrigstes Risiko, gutes Lernprojekt |
+| 14.01.2026 | Navigation früh (Phase 0) | Vermeidet doppelte Arbeit mit Bridge-Activities |
+| 14.01.2026 | WorkoutInput spät (Phase 5) | Komplexester Screen, braucht Erfahrung |
+| 14.01.2026 | Timer zuletzt (Phase 6) | Service-bound, höchste technische Komplexität |
+| 14.01.2026 | Hilt nach Screens (Phase 7) | DI-Migration ist invasiv, separate Phase |
+| 14.01.2026 | Zeitschätzung 6-8 Wochen | Realistisch mit Lernkurve |
+| 14.01.2026 | String Routes statt Type-Safe | Stabilität > Modernität, Type-Safe erst 14 Monate alt |
+| 16.01.2026 | Standard Icons statt Extended | APK-Größe: +5MB vermeiden, Details in `migration_nach_compose_issues.md` |
+
+---
+
+## ⚠️ Risiken & Mitigationen
+
+| Risiko | Wahrscheinlichkeit | Mitigation |
+|--------|-------------------|------------|
+| Längere Build-Zeiten | Hoch | Compose Compiler Cache nutzen |
+| Lernkurve | Mittel | Codelabs durcharbeiten, klein anfangen |
+| Breaking Changes | Niedrig | Compose BOM für konsistente Versionen |
+| Regressions | Mittel | Alte Screens parallel halten bis migriert |
+
+---
+
+## 🏁 Nächste Schritte
+
+1. ✅ Time-Based Feature mit XML fertigstellen
+2. ✅ **Phase 0:** Compose Setup + Navigation Shell (90%)
+3. 🔄 **Phase 1:** Stats Screen als Pilot-Projekt (70%)
+   - [ ] Dunkelmodus testen
+   - [ ] Unit Tests schreiben
+   - [ ] Code Review
+4. ⏳ **Phase 2:** Settings Screen migrieren
+
+---
+
+## 📊 Fortschritts-Tracker
+
+| Phase | Fortschritt | Notizen |
+|-------|-------------|--------|
+| 0 | ⬛⬛⬛⬛⬜ 90% | ComposeView Interop noch offen |
+| 1 | ⬛⬛⬛⬜⬜ 70% | Tests + Review ausstehend |
+| 2 | ⬜⬜⬜⬜⬜ 0% | - |
+| 3 | ⬜⬜⬜⬜⬜ 0% | - |
+| 4 | ⬜⬜⬜⬜⬜ 0% | - |
+| 5 | ⬜⬜⬜⬜⬜ 0% | - |
+| 6 | ⬜⬜⬜⬜⬜ 0% | - |
+| 7 | ⬜⬜⬜⬜⬜ 0% | - |
+| 8 | ⬜⬜⬜⬜⬜ 0% | - |
+
+---
+
+*Letzte Aktualisierung: 16.01.2026*  
+*Review: Senior Android Developer ✅*
