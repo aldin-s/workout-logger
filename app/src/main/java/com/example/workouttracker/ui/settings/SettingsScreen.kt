@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.workouttracker.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,8 +32,11 @@ fun SettingsScreen(
     onVibrationEnabledChange: (Boolean) -> Unit,
     onVibrationDurationChange: (VibrationDuration) -> Unit,
     onSoundEnabledChange: (Boolean) -> Unit,
+    onSoundSelectionClick: () -> Unit,
     onKeepScreenOnChange: (Boolean) -> Unit,
-    onPauseTimeChange: (PauseTime) -> Unit,
+    onPauseTimeChange: (Int) -> Unit,
+    onDefaultSetsChange: (Int) -> Unit,
+    onDefaultRepsChange: (Int) -> Unit,
     onLanguageChange: (String) -> Unit,
     onExportCsv: () -> Unit,
     onExportJson: () -> Unit,
@@ -47,6 +53,8 @@ fun SettingsScreen(
     // Dialogs state
     var showVibrationDurationDialog by remember { mutableStateOf(false) }
     var showPauseTimeDialog by remember { mutableStateOf(false) }
+    var showSetsDialog by remember { mutableStateOf(false) }
+    var showRepsDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showExportFormatDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -78,11 +86,26 @@ fun SettingsScreen(
     LaunchedEffect(state.importResult) {
         when (val result = state.importResult) {
             is ImportResult.Success -> {
-                Toast.makeText(context, context.getString(R.string.import_success, result.count), Toast.LENGTH_LONG).show()
+                val summary = result.summary
+                val message = if (summary.exercisesImported > 0) {
+                    context.getString(
+                        R.string.import_success_with_exercises,
+                        summary.workoutsImported,
+                        summary.exercisesImported,
+                        summary.workoutsSkipped
+                    )
+                } else {
+                    context.getString(
+                        R.string.import_success,
+                        summary.workoutsImported,
+                        summary.workoutsSkipped
+                    )
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 onClearImportResult()
             }
             is ImportResult.Error -> {
-                Toast.makeText(context, R.string.import_error, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
                 onClearImportResult()
             }
             null -> {}
@@ -135,6 +158,7 @@ fun SettingsScreen(
                 .verticalScroll(scrollState)
         ) {
             // Timer Section
+            // Timer Section (Feedback settings)
             SettingsSection(title = stringResource(R.string.settings_timer_section)) {
                 // Vibration Toggle
                 SwitchSettingItem(
@@ -159,18 +183,46 @@ fun SettingsScreen(
                     onCheckedChange = onSoundEnabledChange
                 )
                 
+                // Sound Selection (only visible when sound enabled)
+                if (state.soundEnabled) {
+                    ClickableSettingItem(
+                        title = stringResource(R.string.sound_selection),
+                        value = state.soundName,
+                        onClick = onSoundSelectionClick
+                    )
+                }
+                
                 // Keep Screen On
                 SwitchSettingItem(
                     title = stringResource(R.string.keep_screen_on),
                     checked = state.keepScreenOn,
                     onCheckedChange = onKeepScreenOnChange
                 )
-                
+            }
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            // Workout Section (Default values)
+            SettingsSection(title = stringResource(R.string.settings_workout_section)) {
                 // Default Pause Time
                 ClickableSettingItem(
                     title = stringResource(R.string.default_pause_time),
                     value = stringResource(R.string.pause_time_seconds, state.defaultPauseTime),
                     onClick = { showPauseTimeDialog = true }
+                )
+                
+                // Default Sets
+                ClickableSettingItem(
+                    title = stringResource(R.string.default_sets),
+                    value = stringResource(R.string.default_sets_value, state.defaultSets),
+                    onClick = { showSetsDialog = true }
+                )
+                
+                // Default Reps
+                ClickableSettingItem(
+                    title = stringResource(R.string.default_reps),
+                    value = stringResource(R.string.default_reps_value, state.defaultReps),
+                    onClick = { showRepsDialog = true }
                 )
             }
             
@@ -258,13 +310,44 @@ fun SettingsScreen(
     }
     
     if (showPauseTimeDialog) {
-        PauseTimeDialog(
-            currentPauseTime = PauseTime.fromSeconds(state.defaultPauseTime),
-            onPauseTimeSelected = {
+        NumberInputDialog(
+            title = stringResource(R.string.default_pause_time),
+            currentValue = state.defaultPauseTime,
+            minValue = 1,
+            maxValue = 600,
+            onValueConfirmed = {
                 onPauseTimeChange(it)
                 showPauseTimeDialog = false
             },
             onDismiss = { showPauseTimeDialog = false }
+        )
+    }
+    
+    if (showSetsDialog) {
+        NumberInputDialog(
+            title = stringResource(R.string.default_sets),
+            currentValue = state.defaultSets,
+            minValue = 1,
+            maxValue = 99,
+            onValueConfirmed = {
+                onDefaultSetsChange(it)
+                showSetsDialog = false
+            },
+            onDismiss = { showSetsDialog = false }
+        )
+    }
+    
+    if (showRepsDialog) {
+        NumberInputDialog(
+            title = stringResource(R.string.default_reps),
+            currentValue = state.defaultReps,
+            minValue = 1,
+            maxValue = 999,
+            onValueConfirmed = {
+                onDefaultRepsChange(it)
+                showRepsDialog = false
+            },
+            onDismiss = { showRepsDialog = false }
         )
     }
     
@@ -274,7 +357,7 @@ fun SettingsScreen(
             onLanguageSelected = { 
                 onLanguageChange(it)
                 showLanguageDialog = false
-                Toast.makeText(context, R.string.restart_app_message, Toast.LENGTH_SHORT).show()
+                // No restart needed - Per-App Language API handles it automatically
             },
             onDismiss = { showLanguageDialog = false }
         )
@@ -342,7 +425,19 @@ private fun SwitchSettingItem(
         )
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                // Checked state (ON)
+                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                checkedTrackColor = MaterialTheme.colorScheme.onSurface,
+                checkedBorderColor = MaterialTheme.colorScheme.onSurface,
+                checkedIconColor = MaterialTheme.colorScheme.onSurface,
+                // Unchecked state (OFF)
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.surface,
+                uncheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                uncheckedIconColor = MaterialTheme.colorScheme.surface
+            )
         )
     }
 }
@@ -368,7 +463,12 @@ private fun ClickableSettingItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                // Brutalist: No red, use dimmed text for destructive actions
+                color = if (isDestructive) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
             )
             if (subtitle != null) {
                 Text(
@@ -419,44 +519,6 @@ private fun VibrationDurationDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(duration.labelResId))
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        }
-    )
-}
-
-@Composable
-private fun PauseTimeDialog(
-    currentPauseTime: PauseTime,
-    onPauseTimeSelected: (PauseTime) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.default_pause_time)) },
-        text = {
-            Column {
-                PauseTime.entries.forEach { pauseTime ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPauseTimeSelected(pauseTime) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = pauseTime == currentPauseTime,
-                            onClick = { onPauseTimeSelected(pauseTime) }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("${pauseTime.seconds}s")
                     }
                 }
             }
@@ -565,9 +627,69 @@ private fun DeleteConfirmDialog(
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(
-                    text = stringResource(R.string.delete),
-                    color = MaterialTheme.colorScheme.error
+                    text = stringResource(R.string.delete).uppercase(),
+                    // Brutalist: No red, use regular onSurface with emphasis via uppercase
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+/**
+ * Reusable number picker dialog for selecting integers from a range.
+ * Uses radio buttons for consistent UI with other settings dialogs.
+ */
+@Composable
+private fun NumberInputDialog(
+    title: String,
+    currentValue: Int,
+    minValue: Int,
+    maxValue: Int,
+    onValueConfirmed: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var textValue by remember { mutableStateOf(currentValue.toString()) }
+    var isError by remember { mutableStateOf(false) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = textValue,
+                onValueChange = { newValue ->
+                    // Only allow digits
+                    if (newValue.all { it.isDigit() }) {
+                        textValue = newValue
+                        val intValue = newValue.toIntOrNull()
+                        isError = intValue == null || intValue < minValue || intValue > maxValue
+                    }
+                },
+                isError = isError,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val intValue = textValue.toIntOrNull()
+                    if (intValue != null && intValue in minValue..maxValue) {
+                        onValueConfirmed(intValue)
+                    }
+                },
+                enabled = !isError && textValue.isNotEmpty()
+            ) {
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {

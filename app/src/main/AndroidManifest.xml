@@ -2,11 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".RepsApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locale_config"
         android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.REPS">
@@ -26,6 +32,7 @@
             
         <activity 
             android:name=".ui.workout.WorkoutInputActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
             
         <activity 
@@ -39,6 +46,17 @@
         <activity 
             android:name=".ui.settings.SettingsActivity"
             android:exported="false" />
+        
+        <!-- Timer Foreground Service -->
+        <service
+            android:name=".service.TimerService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="workout_timer" />
+        </service>
         
         <!-- FileProvider for Export/Import -->
         <provider

@@ -165,9 +165,10 @@ fun EditWorkoutSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
+                // Monochrom: Weiß für positiv, Grau für negativ
                 val volumeColor = when {
-                    volumeDifference > 0 -> Color(0xFF90EE90) // Green
-                    volumeDifference < 0 -> Color(0xFFFFB74D) // Orange
+                    volumeDifference > 0 -> MaterialTheme.colorScheme.onSurface      // Weiß
+                    volumeDifference < 0 -> MaterialTheme.colorScheme.onSurfaceVariant // Grau
                     else -> MaterialTheme.colorScheme.onSurface
                 }
                 

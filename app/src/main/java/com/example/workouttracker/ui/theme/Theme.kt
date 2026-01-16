@@ -16,9 +16,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Blue80,
-    secondary = Teal80,
-    tertiary = Orange80,
+    primary = LightSurface,           // White - brutalist design
+    secondary = LightSurface,
+    tertiary = LightSurface,
     background = DarkBackground,
     surface = DarkSurface,
     onPrimary = DarkBackground,
@@ -26,6 +26,8 @@ private val DarkColorScheme = darkColorScheme(
     onTertiary = DarkBackground,
     onBackground = LightSurface,
     onSurface = LightSurface,
+    primaryContainer = DarkSurface,   // For selected cards
+    onPrimaryContainer = LightSurface,
     error = Error
 )
 
@@ -46,8 +48,8 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun RepsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color disabled for brutalist design
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -63,7 +65,7 @@ fun RepsTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

@@ -2,7 +2,7 @@ package com.example.workouttracker.ui.history
 
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,18 +17,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.workouttracker.R
 import com.example.workouttracker.ui.theme.RepsTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-class WorkoutHistoryActivity : ComponentActivity() {
+@AndroidEntryPoint
+class WorkoutHistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         setContent {
-            val historyViewModel: HistoryViewModel = viewModel()
+            val historyViewModel: HistoryViewModel = hiltViewModel()
             val uiState by historyViewModel.uiState.collectAsState()
             
             RepsTheme(darkTheme = true, dynamicColor = false) {

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.workouttracker.data.model.CompletedSet
 
@@ -12,6 +13,9 @@ interface CompletedSetDao {
     
     @Insert
     suspend fun insert(completedSet: CompletedSet)
+    
+    @Insert
+    suspend fun insertAll(sets: List<CompletedSet>)
     
     @Update
     suspend fun update(completedSet: CompletedSet)
@@ -33,4 +37,26 @@ interface CompletedSetDao {
     
     @Query("DELETE FROM completed_sets")
     suspend fun deleteAll()
+    
+    /**
+     * Check if a set with the same exerciseName, timestamp, and setNumber already exists.
+     * Used for duplicate detection during import.
+     */
+    @Query("""
+        SELECT EXISTS(
+            SELECT 1 FROM completed_sets 
+            WHERE exerciseName = :exerciseName 
+            AND timestamp = :timestamp 
+            AND setNumber = :setNumber
+        )
+    """)
+    suspend fun existsByKey(exerciseName: String, timestamp: Long, setNumber: Int): Boolean
+    
+    /**
+     * Import sets atomically - all or nothing.
+     */
+    @Transaction
+    suspend fun importSets(sets: List<CompletedSet>) {
+        insertAll(sets)
+    }
 }

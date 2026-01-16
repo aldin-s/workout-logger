@@ -4,7 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.ui.history.WorkoutHistoryActivity
@@ -13,15 +13,17 @@ import com.example.workouttracker.ui.settings.SettingsActivity
 import com.example.workouttracker.ui.theme.RepsTheme
 import com.example.workouttracker.ui.workout.WorkoutInputActivity
 import com.example.workouttracker.utils.TestDataGenerator
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class MainActivity : ComponentActivity() {
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() {
 
-    private lateinit var database: WorkoutDatabase
+    @Inject
+    lateinit var database: WorkoutDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        database = WorkoutDatabase.getDatabase(this)
         
         setContent {
             RepsTheme(darkTheme = true, dynamicColor = false) {

@@ -1,69 +1,81 @@
 package com.example.workouttracker.ui.workout
 
 import android.app.Application
-import android.content.Context
-import androidx.lifecycle.AndroidViewModel
+import android.content.SharedPreferences
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.workouttracker.R
+import com.example.workouttracker.data.model.Exercise
+import com.example.workouttracker.data.model.getDisplayName
+import com.example.workouttracker.data.repository.ExerciseRepository
 import com.example.workouttracker.ui.settings.SettingsViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class WorkoutInputState(
     val selectedExercise: Exercise? = null,
-    val customExerciseName: String = "",
     val weight: String = "",
     val reps: String = "",
     val pauseTime: String = "120",
     val sets: String = "5",
+    
+    // Dialogs
+    val showAddExerciseDialog: Boolean = false,
+    val showDeleteConfirmDialog: Exercise? = null,
     
     // Validation errors
     val exerciseError: String? = null,
     val weightError: String? = null,
     val repsError: String? = null,
     val pauseTimeError: String? = null,
-    val setsError: String? = null
+    val setsError: String? = null,
+    val errorMessage: String? = null
 )
 
-sealed class Exercise(val nameResId: Int) {
-    object Deadlift : Exercise(R.string.exercise_deadlift)
-    object BenchPress : Exercise(R.string.exercise_bench_press)
-    object Rowing : Exercise(R.string.exercise_rowing)
-    object Squat : Exercise(R.string.exercise_squat)
-    data class Custom(val name: String) : Exercise(0)
-    
-    companion object {
-        val predefinedExercises = listOf(Deadlift, BenchPress, Rowing, Squat)
-    }
-}
-
-class WorkoutInputViewModel(application: Application) : AndroidViewModel(application) {
-    
-    private val prefs = application.getSharedPreferences(SettingsViewModel.PREFS_NAME, Context.MODE_PRIVATE)
+@HiltViewModel
+class WorkoutInputViewModel @Inject constructor(
+    private val application: Application,
+    private val prefs: SharedPreferences,
+    private val exerciseRepository: ExerciseRepository
+) : ViewModel() {
     
     private val _state = MutableStateFlow(WorkoutInputState())
     val state: StateFlow<WorkoutInputState> = _state.asStateFlow()
     
+    // Eagerly: Startet sofort beim ViewModel-Init, nicht erst bei Collector
+    val exercises: StateFlow<List<Exercise>> = exerciseRepository.getAllExercises()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    
     init {
-        // Load default pause time from settings
+        // Load defaults from settings
         val defaultPauseTime = prefs.getInt(SettingsViewModel.PREF_DEFAULT_PAUSE_TIME, 120)
-        _state.update { it.copy(pauseTime = defaultPauseTime.toString()) }
+        val defaultSets = prefs.getInt(SettingsViewModel.PREF_DEFAULT_SETS, 5)
+        val defaultReps = prefs.getInt(SettingsViewModel.PREF_DEFAULT_REPS, 8)
+        _state.update { 
+            it.copy(
+                pauseTime = defaultPauseTime.toString(),
+                sets = defaultSets.toString(),
+                reps = defaultReps.toString()
+            ) 
+        }
+        
+        // Initialize predefined exercises on first app start
+        viewModelScope.launch {
+            exerciseRepository.initializePredefined()
+        }
     }
     
     fun selectExercise(exercise: Exercise) {
         _state.update { 
             it.copy(
                 selectedExercise = exercise,
-                exerciseError = null
-            ) 
-        }
-    }
-    
-    fun setCustomExerciseName(name: String) {
-        _state.update { 
-            it.copy(
-                customExerciseName = name,
                 exerciseError = null
             ) 
         }
@@ -85,57 +97,99 @@ class WorkoutInputViewModel(application: Application) : AndroidViewModel(applica
         _state.update { it.copy(sets = sets, setsError = null) }
     }
     
+    // Dialog controls
+    fun showAddExerciseDialog() {
+        _state.update { it.copy(showAddExerciseDialog = true) }
+    }
+    
+    fun hideAddExerciseDialog() {
+        _state.update { it.copy(showAddExerciseDialog = false, errorMessage = null) }
+    }
+    
+    fun showDeleteConfirmDialog(exercise: Exercise) {
+        _state.update { it.copy(showDeleteConfirmDialog = exercise) }
+    }
+    
+    fun hideDeleteConfirmDialog() {
+        _state.update { it.copy(showDeleteConfirmDialog = null) }
+    }
+    
+    fun clearErrorMessage() {
+        _state.update { it.copy(errorMessage = null) }
+    }
+    
+    // Exercise CRUD operations
+    fun addExercise(name: String) {
+        viewModelScope.launch {
+            exerciseRepository.addExercise(name)
+                .onSuccess {
+                    _state.update { it.copy(showAddExerciseDialog = false, errorMessage = null) }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(errorMessage = error.message) }
+                }
+        }
+    }
+    
+    fun deleteExercise(id: String) {
+        viewModelScope.launch {
+            // Clear selection if deleted exercise was selected
+            if (_state.value.selectedExercise?.id == id) {
+                _state.update { it.copy(selectedExercise = null) }
+            }
+            exerciseRepository.deleteExercise(id)
+            _state.update { it.copy(showDeleteConfirmDialog = null) }
+        }
+    }
+    
+    fun reorderExercises(exercises: List<Exercise>) {
+        viewModelScope.launch {
+            exerciseRepository.reorderExercises(exercises)
+        }
+    }
+    
     fun validate(): WorkoutData? {
         val currentState = _state.value
         var hasError = false
         
-        // Get exercise name
-        val exerciseName = when (val exercise = currentState.selectedExercise) {
-            is Exercise.Custom -> currentState.customExerciseName.trim()
-            is Exercise -> getApplication<Application>().getString(exercise.nameResId)
-            null -> ""
-        }
-        
         // Validate exercise
         if (currentState.selectedExercise == null) {
-            _state.update { it.copy(exerciseError = getApplication<Application>().getString(R.string.error_select_exercise)) }
-            hasError = true
-        } else if (currentState.selectedExercise is Exercise.Custom && currentState.customExerciseName.isBlank()) {
-            _state.update { it.copy(exerciseError = getApplication<Application>().getString(R.string.error_enter_exercise)) }
+            _state.update { it.copy(exerciseError = application.getString(R.string.error_select_exercise)) }
             hasError = true
         }
         
         // Validate weight
         val weight = currentState.weight.toDoubleOrNull()
         if (weight == null || weight <= 0) {
-            _state.update { it.copy(weightError = getApplication<Application>().getString(R.string.error_weight_invalid)) }
+            _state.update { it.copy(weightError = application.getString(R.string.error_weight_invalid)) }
             hasError = true
         }
         
         // Validate reps
         val reps = currentState.reps.toIntOrNull()
         if (reps == null || reps <= 0) {
-            _state.update { it.copy(repsError = getApplication<Application>().getString(R.string.error_reps_invalid)) }
+            _state.update { it.copy(repsError = application.getString(R.string.error_reps_invalid)) }
             hasError = true
         }
         
         // Validate pause time
         val pauseTime = currentState.pauseTime.toIntOrNull()
         if (pauseTime == null || pauseTime <= 0) {
-            _state.update { it.copy(pauseTimeError = getApplication<Application>().getString(R.string.error_pause_invalid)) }
+            _state.update { it.copy(pauseTimeError = application.getString(R.string.error_pause_invalid)) }
             hasError = true
         }
         
         // Validate sets
         val sets = currentState.sets.toIntOrNull()
         if (sets == null || sets <= 0) {
-            _state.update { it.copy(setsError = getApplication<Application>().getString(R.string.error_sets_invalid)) }
+            _state.update { it.copy(setsError = application.getString(R.string.error_sets_invalid)) }
             hasError = true
         }
         
         return if (!hasError && weight != null && reps != null && pauseTime != null && sets != null) {
             WorkoutData(
-                exerciseName = exerciseName,
+                // Use getDisplayName() for proper localization of predefined exercises
+                exerciseName = currentState.selectedExercise!!.getDisplayName(application),
                 weight = weight,
                 reps = reps,
                 pauseTime = pauseTime,

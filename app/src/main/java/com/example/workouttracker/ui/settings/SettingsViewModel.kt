@@ -1,15 +1,20 @@
 package com.example.workouttracker.ui.settings
 
 import android.app.Application
-import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
-import androidx.core.content.FileProvider
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workouttracker.BuildConfig
-import com.example.workouttracker.data.database.WorkoutDatabase
-import com.example.workouttracker.data.model.CompletedSet
+import com.example.workouttracker.R
+import com.example.workouttracker.data.database.CompletedSetDao
+import com.example.workouttracker.data.export.ExportService
+import com.example.workouttracker.data.export.ImportService
+import com.example.workouttracker.data.export.ImportSummary
+import com.example.workouttracker.data.export.UnsupportedSchemaVersionException
+import com.example.workouttracker.data.repository.ExerciseRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,18 +22,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
+import javax.inject.Inject
 
 data class SettingsState(
     val vibrationEnabled: Boolean = true,
     val vibrationDuration: Int = 500,
     val soundEnabled: Boolean = false,
-    val keepScreenOn: Boolean = false,
+    val soundUri: String? = null,
+    val soundName: String = "",
+    val keepScreenOn: Boolean = true,
+    // Workout defaults
     val defaultPauseTime: Int = 120,
+    val defaultSets: Int = 5,
+    val defaultReps: Int = 8,
     val language: String = "de",
     val appVersion: String = "",
     
@@ -47,7 +53,7 @@ sealed class ExportResult {
 }
 
 sealed class ImportResult {
-    data class Success(val count: Int) : ImportResult()
+    data class Success(val summary: ImportSummary) : ImportResult()
     data class Error(val message: String) : ImportResult()
 }
 
@@ -79,10 +85,15 @@ enum class PauseTime(val seconds: Int) {
     }
 }
 
-class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-    
-    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val database = WorkoutDatabase.getDatabase(application)
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val application: Application,
+    private val prefs: SharedPreferences,
+    private val completedSetDao: CompletedSetDao,
+    private val exerciseRepository: ExerciseRepository,
+    private val exportService: ExportService,
+    private val importService: ImportService
+) : ViewModel() {
     
     private val _state = MutableStateFlow(SettingsState())
     val state: StateFlow<SettingsState> = _state.asStateFlow()
@@ -92,16 +103,36 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
     
     private fun loadSettings() {
+        val soundUriString = prefs.getString(PREF_SOUND_URI, null)
+        val soundName = getSoundNameFromUri(soundUriString)
+        
         _state.update { current ->
             current.copy(
                 vibrationEnabled = prefs.getBoolean(PREF_VIBRATION_ENABLED, true),
                 vibrationDuration = prefs.getInt(PREF_VIBRATION_DURATION, 500),
                 soundEnabled = prefs.getBoolean(PREF_SOUND_ENABLED, false),
-                keepScreenOn = prefs.getBoolean(PREF_KEEP_SCREEN_ON, false),
+                soundUri = soundUriString,
+                soundName = soundName,
+                keepScreenOn = prefs.getBoolean(PREF_KEEP_SCREEN_ON, true),
                 defaultPauseTime = prefs.getInt(PREF_DEFAULT_PAUSE_TIME, 120),
+                defaultSets = prefs.getInt(PREF_DEFAULT_SETS, 5),
+                defaultReps = prefs.getInt(PREF_DEFAULT_REPS, 8),
                 language = prefs.getString(PREF_LANGUAGE, "de") ?: "de",
                 appVersion = BuildConfig.VERSION_NAME
             )
+        }
+    }
+    
+    private fun getSoundNameFromUri(uriString: String?): String {
+        if (uriString == null) {
+            return application.getString(R.string.sound_default)
+        }
+        return try {
+            val uri = Uri.parse(uriString)
+            val ringtone = android.media.RingtoneManager.getRingtone(application, uri)
+            ringtone?.getTitle(application) ?: application.getString(R.string.sound_default)
+        } catch (e: Exception) {
+            application.getString(R.string.sound_default)
         }
     }
     
@@ -120,42 +151,56 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(soundEnabled = enabled) }
     }
     
+    fun setSoundUri(uri: Uri?) {
+        prefs.edit().putString(PREF_SOUND_URI, uri?.toString()).apply()
+        val soundName = getSoundNameFromUri(uri?.toString())
+        _state.update { it.copy(soundUri = uri?.toString(), soundName = soundName) }
+    }
+    
     fun setKeepScreenOn(enabled: Boolean) {
         prefs.edit().putBoolean(PREF_KEEP_SCREEN_ON, enabled).apply()
         _state.update { it.copy(keepScreenOn = enabled) }
     }
     
-    fun setDefaultPauseTime(pauseTime: PauseTime) {
-        prefs.edit().putInt(PREF_DEFAULT_PAUSE_TIME, pauseTime.seconds).apply()
-        _state.update { it.copy(defaultPauseTime = pauseTime.seconds) }
+    fun setDefaultPauseTime(seconds: Int) {
+        prefs.edit().putInt(PREF_DEFAULT_PAUSE_TIME, seconds).apply()
+        _state.update { it.copy(defaultPauseTime = seconds) }
+    }
+    
+    fun setDefaultSets(sets: Int) {
+        prefs.edit().putInt(PREF_DEFAULT_SETS, sets).apply()
+        _state.update { it.copy(defaultSets = sets) }
+    }
+    
+    fun setDefaultReps(reps: Int) {
+        prefs.edit().putInt(PREF_DEFAULT_REPS, reps).apply()
+        _state.update { it.copy(defaultReps = reps) }
     }
     
     fun setLanguage(language: String) {
         prefs.edit().putString(PREF_LANGUAGE, language).apply()
         _state.update { it.copy(language = language) }
+        
+        // Apply locale change immediately using Per-App Language API
+        com.example.workouttracker.utils.LocaleManager.setLocale(language)
     }
     
     fun exportToCsv() {
         viewModelScope.launch {
             _state.update { it.copy(isExporting = true, exportResult = null) }
             
-            try {
-                val sets = withContext(Dispatchers.IO) {
-                    database.completedSetDao().getAllSets()
-                }
-                val csv = generateCsv(sets)
-                val fileName = "reps_export_${getCurrentDate()}.csv"
-                val file = File(getApplication<Application>().cacheDir, fileName)
-                
-                withContext(Dispatchers.IO) {
-                    file.writeText(csv)
-                }
-                
-                val intent = createShareIntent(file, "text/csv")
-                _state.update { it.copy(isExporting = false, exportResult = ExportResult.Success(intent)) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isExporting = false, exportResult = ExportResult.Error(e.message ?: "Export failed")) }
+            val result = withContext(Dispatchers.IO) {
+                exportService.exportToCsv()
             }
+            
+            result.fold(
+                onSuccess = { intent ->
+                    _state.update { it.copy(isExporting = false, exportResult = ExportResult.Success(intent)) }
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isExporting = false, exportResult = ExportResult.Error(error.message ?: "Export failed")) }
+                }
+            )
         }
     }
     
@@ -163,23 +208,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _state.update { it.copy(isExporting = true, exportResult = null) }
             
-            try {
-                val sets = withContext(Dispatchers.IO) {
-                    database.completedSetDao().getAllSets()
-                }
-                val json = generateJson(sets)
-                val fileName = "reps_export_${getCurrentDate()}.json"
-                val file = File(getApplication<Application>().cacheDir, fileName)
-                
-                withContext(Dispatchers.IO) {
-                    file.writeText(json)
-                }
-                
-                val intent = createShareIntent(file, "application/json")
-                _state.update { it.copy(isExporting = false, exportResult = ExportResult.Success(intent)) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isExporting = false, exportResult = ExportResult.Error(e.message ?: "Export failed")) }
+            val result = withContext(Dispatchers.IO) {
+                exportService.exportToJson()
             }
+            
+            result.fold(
+                onSuccess = { intent ->
+                    _state.update { it.copy(isExporting = false, exportResult = ExportResult.Success(intent)) }
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isExporting = false, exportResult = ExportResult.Error(error.message ?: "Export failed")) }
+                }
+            )
         }
     }
     
@@ -187,37 +227,23 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _state.update { it.copy(isImporting = true, importResult = null) }
             
-            try {
-                val jsonString = withContext(Dispatchers.IO) {
-                    getApplication<Application>().contentResolver.openInputStream(uri)?.bufferedReader()?.readText()
-                        ?: throw Exception("Could not read file")
-                }
-                
-                val json = JSONObject(jsonString)
-                val workoutsArray = json.getJSONArray("workouts")
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                var importedCount = 0
-                
-                withContext(Dispatchers.IO) {
-                    for (i in 0 until workoutsArray.length()) {
-                        val setJson = workoutsArray.getJSONObject(i)
-                        val set = CompletedSet(
-                            exerciseName = setJson.getString("exerciseName"),
-                            weight = setJson.getDouble("weight"),
-                            completedReps = setJson.getInt("completedReps"),
-                            plannedReps = setJson.getInt("plannedReps"),
-                            setNumber = setJson.getInt("setNumber"),
-                            timestamp = dateFormat.parse(setJson.getString("timestamp")) ?: Date()
-                        )
-                        database.completedSetDao().insert(set)
-                        importedCount++
-                    }
-                }
-                
-                _state.update { it.copy(isImporting = false, importResult = ImportResult.Success(importedCount)) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isImporting = false, importResult = ImportResult.Error(e.message ?: "Import failed")) }
+            val result = withContext(Dispatchers.IO) {
+                importService.importFromJson(uri)
             }
+            
+            result.fold(
+                onSuccess = { summary ->
+                    _state.update { it.copy(isImporting = false, importResult = ImportResult.Success(summary)) }
+                },
+                onFailure = { error ->
+                    val message = when (error) {
+                        is UnsupportedSchemaVersionException -> 
+                            application.getString(R.string.import_error_schema_version, error.foundVersion)
+                        else -> error.message ?: "Import failed"
+                    }
+                    _state.update { it.copy(isImporting = false, importResult = ImportResult.Error(message)) }
+                }
+            )
         }
     }
     
@@ -227,7 +253,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             
             try {
                 withContext(Dispatchers.IO) {
-                    database.completedSetDao().deleteAll()
+                    completedSetDao.deleteAll()
+                    exerciseRepository.deleteAllAndReinitialize()
                     prefs.edit().clear().apply()
                 }
                 
@@ -252,71 +279,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _state.update { it.copy(deleteResult = null) }
     }
     
-    private fun generateCsv(sets: List<CompletedSet>): String {
-        val sb = StringBuilder()
-        sb.append("Date,Exercise,Weight,Reps,Set,Timestamp\n")
-        
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        
-        sets.forEach { set ->
-            sb.append("${dateFormat.format(set.timestamp)},")
-            sb.append("${set.exerciseName},")
-            sb.append("${set.weight},")
-            sb.append("${set.completedReps},")
-            sb.append("${set.setNumber},")
-            sb.append("${timeFormat.format(set.timestamp)}\n")
-        }
-        
-        return sb.toString()
-    }
-    
-    private fun generateJson(sets: List<CompletedSet>): String {
-        val json = JSONObject()
-        json.put("exportDate", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date()))
-        json.put("appVersion", BuildConfig.VERSION_NAME)
-        
-        val workoutsArray = JSONArray()
-        sets.forEach { set ->
-            val setJson = JSONObject()
-            setJson.put("exerciseName", set.exerciseName)
-            setJson.put("weight", set.weight)
-            setJson.put("completedReps", set.completedReps)
-            setJson.put("plannedReps", set.plannedReps)
-            setJson.put("setNumber", set.setNumber)
-            setJson.put("timestamp", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(set.timestamp))
-            workoutsArray.put(setJson)
-        }
-        
-        json.put("workouts", workoutsArray)
-        return json.toString(2)
-    }
-    
-    private fun createShareIntent(file: File, mimeType: String): Intent {
-        val uri = FileProvider.getUriForFile(
-            getApplication(),
-            "${getApplication<Application>().packageName}.fileprovider",
-            file
-        )
-        
-        return Intent(Intent.ACTION_SEND).apply {
-            type = mimeType
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-    }
-    
-    private fun getCurrentDate(): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-    }
-    
     companion object {
         const val PREFS_NAME = "reps_settings"
         const val PREF_VIBRATION_ENABLED = "vibration_enabled"
         const val PREF_VIBRATION_DURATION = "vibration_duration"
         const val PREF_SOUND_ENABLED = "sound_enabled"
+        const val PREF_SOUND_URI = "sound_uri"
         const val PREF_KEEP_SCREEN_ON = "keep_screen_on"
         const val PREF_DEFAULT_PAUSE_TIME = "default_pause_time"
+        const val PREF_DEFAULT_SETS = "default_sets"
+        const val PREF_DEFAULT_REPS = "default_reps"
         const val PREF_LANGUAGE = "language"
     }
 }
