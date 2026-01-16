@@ -898,6 +898,7 @@ fun WorkoutInputScreen(
 | 14.01.2026 | String Routes statt Type-Safe | Stabilität > Modernität, Type-Safe erst 14 Monate alt |
 | 16.01.2026 | Standard Icons statt Extended | APK-Größe: +5MB vermeiden, Details in `migration_nach_compose_issues.md` |
 | 16.01.2026 | Stats-Feature entfernt | Feature nicht benötigt, Phase 1 obsolet, 760 Zeilen Code entfernt |
+| 17.01.2026 | Phase 3 (History) komplett | WorkoutHistoryActivity → ComponentActivity, EditWorkoutBottomSheet Fragment → Compose ModalBottomSheet |
 
 ---
 
@@ -934,7 +935,7 @@ fun WorkoutInputScreen(
 | 0 | ⬛⬛⬛⬛⬜ 90% | ComposeView Interop noch offen |
 | 1 | ❌ Entfernt | Stats-Feature nicht mehr benötigt |
 | 2 | ⬜⬜⬜⬜⬜ 0% | - |
-| 3 | ⬛⬛⬛⬛⬜ 80% | HistoryScreen.kt + ViewModel erstellt |
+| 3 | ⬛⬛⬛⬛⬛ 100% | HistoryScreen + EditWorkoutSheet + Tests ✅ |
 | 4 | ⬛⬛⬛⬛⬛ 100% | MainScreen.kt erstellt, Navigation funktioniert |
 | 5 | ⬜⬜⬜⬜⬜ 0% | - |
 | 6 | ⬜⬜⬜⬜⬜ 0% | - |
