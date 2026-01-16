@@ -92,16 +92,21 @@
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="settings_display">Display</string>
     <string name="settings_timer">Timer</string>
+    <string name="settings_timer_section">Timer</string>
     <string name="settings_appearance">Darstellung</string>
     <string name="settings_data">Daten</string>
+    <string name="settings_data_section">Daten</string>
+    <string name="settings_language_section">Sprache</string>
     <string name="settings_about">Über REPS</string>
     
-    <!-- Settings - Notifications -->
+    <!-- Settings - Timer Section -->
+    <string name="vibration">Vibration</string>
     <string name="vibration_on_timer_end">Vibration bei Timer-Ende</string>
     <string name="vibration_duration">Vibrationsdauer</string>
     <string name="vibration_short">Kurz (200ms)</string>
     <string name="vibration_medium">Mittel (500ms)</string>
     <string name="vibration_long">Lang (1000ms)</string>
+    <string name="sound">Sound</string>
     <string name="sound_on_timer_end">Sound bei Timer-Ende</string>
     <string name="keep_screen_on">Bildschirm aktiv halten</string>
     <string name="keep_screen_on_description">Verhindert Standby während des Workouts</string>
@@ -117,8 +122,11 @@
     
     <!-- Settings - Data -->
     <string name="export_history">Historie exportieren</string>
+    <string name="export_history_subtitle">Als CSV oder JSON speichern</string>
     <string name="import_history">Historie importieren</string>
+    <string name="import_history_subtitle">JSON-Backup wiederherstellen</string>
     <string name="delete_all_data">Alle Daten löschen</string>
+    <string name="delete_all_data_subtitle">Kann nicht rückgängig gemacht werden</string>
     <string name="delete_all_warning">Kann nicht rückgängig gemacht werden</string>
     <string name="export_format_title">Format auswählen</string>
     <string name="export_csv">CSV (Excel, Google Sheets)</string>
@@ -136,6 +144,8 @@
     
     <!-- Settings - About -->
     <string name="app_version">Version %s</string>
+    <string name="app_version_label">App-Version</string>
+    <string name="restart_app_message">Bitte App neustarten für die Sprachänderung</string>
     <string name="app_copyright">© 2025</string>
     
     <!-- Empty States -->

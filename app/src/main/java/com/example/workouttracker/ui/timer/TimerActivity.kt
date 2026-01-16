@@ -16,7 +16,7 @@ import androidx.core.content.ContextCompat
 import com.example.workouttracker.R
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.data.model.CompletedSet
-import com.example.workouttracker.ui.settings.SettingsActivity
+import com.example.workouttracker.ui.settings.SettingsViewModel
 import com.example.workouttracker.ui.tracking.TrackingActivity
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
@@ -203,12 +203,12 @@ class TimerActivity : AppCompatActivity() {
     }
     
     private fun triggerVibration() {
-        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val vibrationEnabled = prefs.getBoolean(SettingsActivity.PREF_VIBRATION_ENABLED, true)
+        val prefs = getSharedPreferences(SettingsViewModel.PREFS_NAME, Context.MODE_PRIVATE)
+        val vibrationEnabled = prefs.getBoolean(SettingsViewModel.PREF_VIBRATION_ENABLED, true)
         
         if (!vibrationEnabled) return
         
-        val duration = prefs.getInt(SettingsActivity.PREF_VIBRATION_DURATION, 500).toLong()
+        val duration = prefs.getInt(SettingsViewModel.PREF_VIBRATION_DURATION, 500).toLong()
         
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -227,8 +227,8 @@ class TimerActivity : AppCompatActivity() {
     }
     
     private fun triggerSound() {
-        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val soundEnabled = prefs.getBoolean(SettingsActivity.PREF_SOUND_ENABLED, false)
+        val prefs = getSharedPreferences(SettingsViewModel.PREFS_NAME, Context.MODE_PRIVATE)
+        val soundEnabled = prefs.getBoolean(SettingsViewModel.PREF_SOUND_ENABLED, false)
         
         if (!soundEnabled) return
         
@@ -242,8 +242,8 @@ class TimerActivity : AppCompatActivity() {
     }
     
     private fun applyKeepScreenOnSetting() {
-        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        val keepScreenOn = prefs.getBoolean(SettingsActivity.PREF_KEEP_SCREEN_ON, false)
+        val prefs = getSharedPreferences(SettingsViewModel.PREFS_NAME, Context.MODE_PRIVATE)
+        val keepScreenOn = prefs.getBoolean(SettingsViewModel.PREF_KEEP_SCREEN_ON, false)
         
         if (keepScreenOn) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
