@@ -934,8 +934,8 @@ fun WorkoutInputScreen(
 | 0 | ⬛⬛⬛⬛⬜ 90% | ComposeView Interop noch offen |
 | 1 | ❌ Entfernt | Stats-Feature nicht mehr benötigt |
 | 2 | ⬜⬜⬜⬜⬜ 0% | - |
-| 3 | ⬜⬜⬜⬜⬜ 0% | - |
-| 4 | ⬛⬛⬛⬜⬜ 60% | MainScreen.kt erstellt, Navigation funktioniert |
+| 3 | ⬛⬛⬛⬛⬜ 80% | HistoryScreen.kt + ViewModel erstellt |
+| 4 | ⬛⬛⬛⬛⬛ 100% | MainScreen.kt erstellt, Navigation funktioniert |
 | 5 | ⬜⬜⬜⬜⬜ 0% | - |
 | 6 | ⬜⬜⬜⬜⬜ 0% | - |
 | 7 | ⬜⬜⬜⬜⬜ 0% | - |
