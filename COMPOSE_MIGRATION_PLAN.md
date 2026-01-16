@@ -1,8 +1,9 @@
 # 🚀 Jetpack Compose Migration Plan
 
 > **Erstellt:** 14.01.2026  
-> **Status:** 📋 Geplant  
-> **Priorität:** Nach Time-Based Feature
+> **Status:** � In Arbeit (Phase 1)  
+> **Priorität:** Nach Time-Based Feature  
+> **Letzte Überarbeitung:** 16.01.2026 - Komplexitätsanalyse aktualisiert
 
 ---
 
@@ -28,12 +29,12 @@ Dieses Dokument beschreibt die schrittweise Migration von XML-Layouts zu Jetpack
 
 | Phase | Beschreibung | Dauer | Komplexität | Status |
 |-------|--------------|-------|-------------|--------|
-| **0** | Setup + Theme + Navigation Shell | 2 Tage | 🟢 Niedrig | ⏳ Wartend |
-| **1** | Stats Screen (Pilot) | 3 Tage | 🟢 Niedrig | ⏳ Wartend |
-| **2** | Settings Screen | 2 Tage | 🟢 Niedrig | ⏳ Wartend |
+| **0** | Setup + Theme + Navigation Shell | 2 Tage | 🟢 Niedrig | ✅ 90% |
+| **1** | Stats Screen (Pilot) | 3 Tage | 🟢 Niedrig | 🔄 70% |
+| **2** | Settings Screen | **5 Tage** | **🔴 Hoch** | ⏳ Wartend |
 | **3** | History Screen | 3 Tage | 🟡 Mittel | ⏳ Wartend |
-| **4** | Main/Dashboard Screen | 3 Tage | 🟡 Mittel | ⏳ Wartend |
-| **5** | WorkoutInput Screen | 5 Tage | 🔴 Hoch | ⏳ Wartend |
+| **4** | Main/Dashboard Screen | **2 Tage** | **🟢 Niedrig** | ⏳ Wartend |
+| **5** | WorkoutInput Screen | **3 Tage** | **🟡 Mittel** | ⏳ Wartend |
 | **6** | Timer Screen | 4 Tage | 🔴 Hoch | ⏳ Wartend |
 | **7** | Hilt Integration | 3 Tage | 🟡 Mittel | ⏳ Wartend |
 | **8** | Cleanup & Polish | 3 Tage | 🟢 Niedrig | ⏳ Wartend |
@@ -41,6 +42,26 @@ Dieses Dokument beschreibt die schrittweise Migration von XML-Layouts zu Jetpack
 **Geschätzte Gesamtdauer:** 6-8 Wochen (bei Teilzeit-Entwicklung)
 
 > ⚠️ **Hinweis:** Zeitschätzungen inkludieren Lernzeit für Compose-Einsteiger.
+
+### 📈 Komplexitätsanalyse (16.01.2026)
+
+**Code-Analyse der bestehenden Activities:**
+
+| Screen | Zeilen | Urspr. Schätzung | Reale Komplexität | Begründung |
+|--------|--------|------------------|-------------------|-------------|
+| Settings | 487 | 🟢 Niedrig | 🔴 **Hoch** | Import/Export, Theme, Sprache, SharedPrefs, Dialoge |
+| WorkoutInput | 268 | 🔴 Hoch | 🟡 Mittel | Card-Auswahl, Formulare (weniger komplex als gedacht) |
+| Timer | 259 | 🔴 Hoch | 🔴 Hoch | CountDownTimer, Vibration, Sound, Service-Logik |
+| History | 232 | 🟡 Mittel | 🟡 Mittel | RecyclerView + Gruppierung, Dialoge |
+| Main | 103 | 🟡 Mittel | 🟢 Niedrig | Nur Navigation-Hub, Debug-Menü |
+| Tracking | 62 | - | 🟢 Niedrig | Einfacher Übergangs-Screen |
+
+### Empfohlene Reihenfolge-Anpassung
+
+Basierend auf der Analyse wird die Reihenfolge **beibehalten**, aber mit angepassten Zeitschätzungen:
+
+1. **Phase 4 (Main) vorziehen?** - Niedrige Komplexität, aber Navigation-Hub
+2. **Phase 2 (Settings) braucht mehr Zeit** - ViewModel-Extraktion zuerst
 
 ### Reihenfolge-Begründung
 
@@ -397,9 +418,26 @@ fun SettingsScreen(
 
 ### 2.3 Checkliste Phase 2
 
-- [ ] SettingsViewModel.kt erstellt
+> ⚠️ **Achtung:** SettingsActivity ist mit 487 Zeilen komplexer als erwartet!
+> Enthält: Import/Export, Theme-Wechsel, Sprache, SharedPreferences, 6+ AlertDialogs
+> **Empfehlung:** Erst SettingsViewModel extrahieren, dann UI migrieren.
+
+**Phase 2a: ViewModel-Extraktion (Vorarbeit)**
+- [ ] SettingsUiState.kt (Sealed Class) erstellt
+- [ ] SettingsViewModel.kt mit StateFlow erstellt
+- [ ] SharedPreferences-Logik in ViewModel verschoben
+- [ ] Import/Export-Logik in ViewModel verschoben
+
+**Phase 2b: Compose UI**
 - [ ] SettingsScreen.kt erstellt
 - [ ] SettingsItem Komponenten erstellt
+- [ ] Switch-Settings (Vibration, Sound, KeepScreenOn)
+- [ ] Dialog-Settings (Pausenzeit, Vibrationsdauer, Theme, Sprache)
+- [ ] Export-Funktionalität (CSV/JSON)
+- [ ] Import-Funktionalität (JSON)
+- [ ] Daten löschen mit Bestätigungsdialog
+
+**Phase 2c: Integration & Cleanup**
 - [ ] Sprache-Wechsel funktioniert
 - [ ] Theme-Wechsel funktioniert
 - [ ] In RepsNavHost registriert
