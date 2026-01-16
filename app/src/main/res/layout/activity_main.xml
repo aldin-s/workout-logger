@@ -99,6 +99,21 @@
             android:letterSpacing="0.1"
             app:strokeColor="#FFFFFF"
             app:strokeWidth="1dp"
+            app:cornerRadius="8dp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/statsButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/stats_button"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:textColor="#FFFFFF"
+            android:letterSpacing="0.1"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="1dp"
             app:cornerRadius="8dp" />
 
     </LinearLayout>

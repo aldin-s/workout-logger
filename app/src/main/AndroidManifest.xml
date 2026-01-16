@@ -40,6 +40,11 @@
             android:name=".ui.settings.SettingsActivity"
             android:exported="false" />
         
+        <activity
+            android:name=".ui.stats.StatsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.REPS" />
+        
         <!-- FileProvider for Export/Import -->
         <provider
             android:name="androidx.core.content.FileProvider"

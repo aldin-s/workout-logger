@@ -343,8 +343,8 @@ class StatsActivity : ComponentActivity() {
 - [x] In RepsNavHost registriert
 - [x] Navigation von Main → Stats funktioniert (Bridge Activity)
 - [ ] Dunkelmodus getestet
-- [ ] **Tests:** StatsViewModelTest.kt
-- [ ] **Tests:** StatsScreenTest.kt (Compose Testing)
+- [x] **Tests:** StatsViewModelTest.kt (8 Tests ✅)
+- [x] **Tests:** StatsUiStateTest.kt (5 Tests ✅)
 - [ ] **Review:** Code Review durchgeführt
 
 > ⚠️ **Issue gelöst:** Extended Material Icons durch Standard Icons ersetzt (siehe `migration_nach_compose_issues.md`)
@@ -1035,7 +1035,7 @@ fun WorkoutInputScreen(
 | Phase | Fortschritt | Notizen |
 |-------|-------------|--------|
 | 0 | ⬛⬛⬛⬛⬜ 90% | ComposeView Interop noch offen |
-| 1 | ⬛⬛⬛⬜⬜ 70% | Tests + Review ausstehend |
+| 1 | ⬛⬛⬛⬛⬜ 85% | 13 Tests ✅, Dunkelmodus + Review offen |
 | 2 | ⬜⬜⬜⬜⬜ 0% | - |
 | 3 | ⬜⬜⬜⬜⬜ 0% | - |
 | 4 | ⬜⬜⬜⬜⬜ 0% | - |

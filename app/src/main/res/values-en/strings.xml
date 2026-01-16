@@ -7,6 +7,7 @@
     <string name="main_sets_display">0/0</string>
     <string name="start_workout">START WORKOUT</string>
     <string name="workout_history">WORKOUT HISTORY</string>
+    <string name="stats_button">STATISTICS</string>
     
     <!-- Workout Input Activity -->
     <string name="select_exercise">SELECT EXERCISE</string>
@@ -169,4 +170,15 @@
         <item quantity="one">%d set</item>
         <item quantity="other">%d sets</item>
     </plurals>
+    
+    <!-- Stats Screen -->
+    <string name="stats_title">STATISTICS</string>
+    <string name="stats_weekly_workouts">Workouts this week</string>
+    <string name="stats_total_workouts">Total workouts</string>
+    <string name="stats_total_weight">Total weight lifted</string>
+    <string name="stats_total_sets">Total sets</string>
+    <string name="stats_favorite_exercise">Favorite exercise</string>
+    <string name="stats_last_workout">Last workout</string>
+    <string name="stats_error">Error loading stats</string>
+    <string name="back">Back</string>
 </resources>

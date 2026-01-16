@@ -7,6 +7,7 @@
     <string name="main_sets_display">0/0</string>
     <string name="start_workout">START WORKOUT</string>
     <string name="workout_history">WORKOUT HISTORY</string>
+    <string name="stats_button">STATISTIKEN</string>
     
     <!-- Workout Input Activity -->
     <string name="select_exercise">ÜBUNG WÄHLEN</string>
@@ -169,4 +170,15 @@
         <item quantity="one">%d Satz</item>
         <item quantity="other">%d Sätze</item>
     </plurals>
+    
+    <!-- Stats Screen -->
+    <string name="stats_title">STATISTIKEN</string>
+    <string name="stats_weekly_workouts">Workouts diese Woche</string>
+    <string name="stats_total_workouts">Gesamtanzahl Workouts</string>
+    <string name="stats_total_weight">Gesamtgewicht gehoben</string>
+    <string name="stats_total_sets">Gesamtanzahl Sätze</string>
+    <string name="stats_favorite_exercise">Häufigste Übung</string>
+    <string name="stats_last_workout">Letztes Workout</string>
+    <string name="stats_error">Fehler beim Laden</string>
+    <string name="back">Zurück</string>
 </resources>

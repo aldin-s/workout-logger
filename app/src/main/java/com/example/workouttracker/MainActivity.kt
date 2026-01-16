@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.workouttracker.data.database.WorkoutDatabase
 import com.example.workouttracker.ui.history.WorkoutHistoryActivity
 import com.example.workouttracker.ui.settings.SettingsActivity
+import com.example.workouttracker.ui.stats.StatsActivity
 import com.example.workouttracker.ui.workout.WorkoutInputActivity
 import com.example.workouttracker.utils.TestDataGenerator
 import com.example.workouttracker.utils.ThemeManager
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var setsTextView: TextView
     private lateinit var startWorkoutButton: Button
     private lateinit var historyButton: Button
+    private lateinit var statsButton: Button
     private lateinit var settingsButton: ImageButton
     private lateinit var database: WorkoutDatabase
 
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         setsTextView = findViewById(R.id.setsTextView)
         startWorkoutButton = findViewById(R.id.startWorkoutButton)
         historyButton = findViewById(R.id.historyButton)
+        statsButton = findViewById(R.id.statsButton)
         settingsButton = findViewById(R.id.settingsButton)
     }
 
@@ -59,6 +62,11 @@ class MainActivity : AppCompatActivity() {
 
         historyButton.setOnClickListener {
             val intent = Intent(this, WorkoutHistoryActivity::class.java)
+            startActivity(intent)
+        }
+        
+        statsButton.setOnClickListener {
+            val intent = Intent(this, StatsActivity::class.java)
             startActivity(intent)
         }
         
