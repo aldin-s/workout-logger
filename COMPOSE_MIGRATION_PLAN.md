@@ -937,7 +937,7 @@ fun WorkoutInputScreen(
 | 2 | ⬛⬛⬛⬛⬛ 100% | SettingsScreen + ViewModel + Activity komplett ✅ |
 | 3 | ⬛⬛⬛⬛⬛ 100% | HistoryScreen + EditWorkoutSheet + Tests ✅ |
 | 4 | ⬛⬛⬛⬛⬛ 100% | MainScreen.kt erstellt, Navigation funktioniert |
-| 5 | ⬜⬜⬜⬜⬜ 0% | - |
+| 5 | ⬛⬛⬛⬛⬛ 100% | WorkoutInputScreen + ViewModel + Activity komplett ✅ |
 | 6 | ⬜⬜⬜⬜⬜ 0% | - |
 | 7 | ⬜⬜⬜⬜⬜ 0% | - |
 | 8 | ⬜⬜⬜⬜⬜ 0% | - |

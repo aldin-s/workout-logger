@@ -10,13 +10,16 @@
     <string name="stats_button">STATISTIKEN</string>
     
     <!-- Workout Input Activity -->
+    <string name="workout_input_title">NEUES WORKOUT</string>
     <string name="select_exercise">ÜBUNG WÄHLEN</string>
     <string name="exercise_deadlift">Kreuzheben</string>
     <string name="exercise_bench_press">Bankdrücken</string>
     <string name="exercise_rowing">Rudern</string>
     <string name="exercise_squat">Kniebeuge</string>
+    <string name="exercise_custom">Eigene Übung</string>
     <string name="custom_exercise">+ Eigene Übung</string>
     <string name="selected_exercise_label">Ausgewählte Übung:</string>
+    <string name="workout_parameters">PARAMETER</string>
     <string name="weight_label">Gewicht (kg)</string>
     <string name="reps_label">Wiederholungen</string>
     <string name="pause_time_label">Pausenzeit (Sekunden)</string>

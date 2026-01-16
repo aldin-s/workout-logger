@@ -10,13 +10,16 @@
     <string name="stats_button">STATISTICS</string>
     
     <!-- Workout Input Activity -->
+    <string name="workout_input_title">NEW WORKOUT</string>
     <string name="select_exercise">SELECT EXERCISE</string>
     <string name="exercise_deadlift">Deadlift</string>
     <string name="exercise_bench_press">Bench Press</string>
     <string name="exercise_rowing">Rowing</string>
     <string name="exercise_squat">Squat</string>
+    <string name="exercise_custom">Custom Exercise</string>
     <string name="custom_exercise">+ Custom Exercise</string>
     <string name="selected_exercise_label">Selected Exercise:</string>
+    <string name="workout_parameters">PARAMETERS</string>
     <string name="weight_label">Weight (kg)</string>
     <string name="reps_label">Repetitions</string>
     <string name="pause_time_label">Rest Time (Seconds)</string>
