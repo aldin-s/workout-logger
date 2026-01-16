@@ -6,7 +6,6 @@ package com.example.workouttracker.ui.navigation
  */
 object Routes {
     const val MAIN = "main"
-    const val STATS = "stats"
     const val SETTINGS = "settings"
     const val HISTORY = "history"
     const val WORKOUT_INPUT = "workout_input"

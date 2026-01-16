@@ -12,13 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.workouttracker.ui.stats.StatsScreen
 
 /**
  * Zentraler Navigation Host für die REPS App.
  * 
  * Wird schrittweise mit echten Screens befüllt:
- * - Phase 1: Stats ✅
  * - Phase 2: Settings
  * - Phase 3: History
  * - Phase 4: Main
@@ -28,16 +26,18 @@ import com.example.workouttracker.ui.stats.StatsScreen
 @Composable
 fun RepsNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Routes.STATS // Erster Compose-Screen
+    startDestination: String = Routes.MAIN
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Phase 1: Stats Screen (Pilot) ✅
-        composable(Routes.STATS) {
-            StatsScreen(
-                onNavigateBack = { navController.popBackStack() }
+        // Phase 4: Main/Dashboard Screen
+        composable(Routes.MAIN) {
+            // TODO: MainScreen implementieren
+            PlaceholderScreen(
+                title = "REPS",
+                onNavigateBack = { /* Main hat kein Back */ }
             )
         }
         
