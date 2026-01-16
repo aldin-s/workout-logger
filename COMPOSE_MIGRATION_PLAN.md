@@ -1018,9 +1018,15 @@ fun WorkoutInputScreen(
 2. ✅ **Phase 0:** Compose Setup + Navigation Shell (90%)
 3. 🔄 **Phase 1:** Stats Screen als Pilot-Projekt (70%)
    - [ ] Dunkelmodus testen
-   - [ ] Unit Tests schreiben
+   - [ ] Unit Tests schreiben (StatsViewModelTest.kt)
    - [ ] Code Review
-4. ⏳ **Phase 2:** Settings Screen migrieren
+4. ⏳ **Phase 4 vorziehen:** Main Screen (103 Zeilen, einfacher Navigation-Hub)
+5. ⏳ **Phase 3:** History Screen (232 Zeilen, RecyclerView → LazyColumn)
+6. ⏳ **Phase 2:** Settings Screen (487 Zeilen, mit Sub-Phasen 2a/2b/2c)
+7. ⏳ **Phase 5:** WorkoutInput Screen
+8. ⏳ **Phase 6:** Timer Screen (komplexeste Migration)
+
+> 💡 **Anpassung 16.01.2026:** Phase 4 (Main) wird vorgezogen, da geringste Komplexität und zentraler Navigation-Hub.
 
 ---
 
