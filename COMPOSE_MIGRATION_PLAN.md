@@ -494,16 +494,18 @@ fun MainScreen(
 
 ### 4.3 Checkliste Phase 4
 
-- [ ] MainScreen.kt erstellt
-- [ ] MainViewModel.kt erstellt
+- [x] MainScreen.kt erstellt
+- [ ] MainViewModel.kt erstellt (optional - aktuell stateless)
 - [ ] QuickStart Funktionalität
 - [ ] Letzte Workouts anzeigen
-- [ ] Navigation zu allen Screens
+- [x] Navigation zu allen Screens
 - [ ] Als startDestination in NavHost
-- [ ] Alte MainActivity gelöscht
-- [ ] **Tests:** MainViewModelTest.kt
+- [x] MainActivity zu ComponentActivity konvertiert
+- [ ] activity_main.xml löschen
 - [ ] **Tests:** MainScreenTest.kt
 - [ ] **Review:** Code Review durchgeführt
+
+> ✅ **16.01.2026:** MainScreen.kt erstellt, MainActivity nutzt jetzt Compose!
 
 ---
 
@@ -933,7 +935,7 @@ fun WorkoutInputScreen(
 | 1 | ❌ Entfernt | Stats-Feature nicht mehr benötigt |
 | 2 | ⬜⬜⬜⬜⬜ 0% | - |
 | 3 | ⬜⬜⬜⬜⬜ 0% | - |
-| 4 | ⬜⬜⬜⬜⬜ 0% | Nächster Schritt |
+| 4 | ⬛⬛⬛⬜⬜ 60% | MainScreen.kt erstellt, Navigation funktioniert |
 | 5 | ⬜⬜⬜⬜⬜ 0% | - |
 | 6 | ⬜⬜⬜⬜⬜ 0% | - |
 | 7 | ⬜⬜⬜⬜⬜ 0% | - |
