@@ -30,7 +30,7 @@ Dieses Dokument beschreibt die schrittweise Migration von XML-Layouts zu Jetpack
 | Phase | Beschreibung | Dauer | Komplexität | Status |
 |-------|--------------|-------|-------------|--------|
 | **0** | Setup + Theme + Navigation Shell | 2 Tage | 🟢 Niedrig | ✅ 90% |
-| **1** | Stats Screen (Pilot) | 3 Tage | 🟢 Niedrig | 🔄 70% |
+| ~~**1**~~ | ~~Stats Screen (Pilot)~~ | - | - | ❌ Entfernt |
 | **2** | Settings Screen | **5 Tage** | **🔴 Hoch** | ⏳ Wartend |
 | **3** | History Screen | 3 Tage | 🟡 Mittel | ⏳ Wartend |
 | **4** | Main/Dashboard Screen | **2 Tage** | **🟢 Niedrig** | ⏳ Wartend |
@@ -39,9 +39,11 @@ Dieses Dokument beschreibt die schrittweise Migration von XML-Layouts zu Jetpack
 | **7** | Hilt Integration | 3 Tage | 🟡 Mittel | ⏳ Wartend |
 | **8** | Cleanup & Polish | 3 Tage | 🟢 Niedrig | ⏳ Wartend |
 
-**Geschätzte Gesamtdauer:** 6-8 Wochen (bei Teilzeit-Entwicklung)
+**Geschätzte Gesamtdauer:** 5-7 Wochen (bei Teilzeit-Entwicklung)
 
 > ⚠️ **Hinweis:** Zeitschätzungen inkludieren Lernzeit für Compose-Einsteiger.
+> 
+> 📝 **16.01.2026:** Phase 1 (Stats) wurde entfernt - Feature nicht mehr benötigt.
 
 ### 📈 Komplexitätsanalyse (16.01.2026)
 
@@ -67,7 +69,7 @@ Basierend auf der Analyse wird die Reihenfolge **beibehalten**, aber mit angepas
 
 | Prinzip | Erklärung |
 |---------|------------|
-| **Einfach → Komplex** | Stats (read-only) vor WorkoutInput (Formulare) |
+| **Einfach → Komplex** | Main (Navigation-Hub) vor Settings (komplexe Logik) |
 | **Navigation früh** | Vermeidet doppelte Arbeit mit Bridge-Activities |
 | **Service-bound zuletzt** | Timer mit Foreground Service ist am komplexesten |
 | **Hilt nach Screens** | DI-Migration ist invasiv, separate Phase |
@@ -233,121 +235,16 @@ fun RepsNavHost(
 
 ---
 
-## 📊 Phase 1: Erster Compose Screen (Stats/Statistik)
+## ~~📊 Phase 1: Erster Compose Screen (Stats/Statistik)~~
 
-### Warum Stats zuerst?
-- Neuer Screen (kein Refactoring nötig)
-- Read-Only (keine komplexe Logik)
-- Perfekt zum Lernen
-
-### 1.1 Screen-Struktur
-
-```
-ui/
-  stats/
-    StatsScreen.kt          // Main Composable
-    StatsViewModel.kt       // State Management
-    components/
-      StatCard.kt           // Wiederverwendbare Komponente
-      WorkoutChart.kt       // Diagramm-Komponente
-```
-
-### 1.2 StatsScreen Skeleton
-
-```kotlin
-@Composable
-fun StatsScreen(
-    viewModel: StatsViewModel = viewModel(),
-    onNavigateBack: () -> Unit
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Statistiken") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        when (val state = uiState) {
-            is StatsUiState.Loading -> LoadingIndicator()
-            is StatsUiState.Success -> StatsContent(state, Modifier.padding(padding))
-            is StatsUiState.Error -> ErrorMessage(state.message)
-        }
-    }
-}
-
-@Composable
-private fun StatsContent(
-    state: StatsUiState.Success,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(modifier = modifier.fillMaxSize()) {
-        item {
-            StatCard(
-                title = "Workouts diese Woche",
-                value = state.weeklyWorkouts.toString(),
-                icon = Icons.Default.FitnessCenter
-            )
-        }
-        item {
-            StatCard(
-                title = "Gesamtgewicht",
-                value = "${state.totalWeight} kg",
-                icon = Icons.Default.Scale
-            )
-        }
-        // Weitere Stats...
-    }
-}
-```
-
-### 1.3 Integration in bestehende App
-
-```kotlin
-// In MainActivity oder Navigation
-Button(onClick = {
-    // Temporär: Mixed Navigation (XML → Compose)
-    startActivity(Intent(this, StatsActivity::class.java))
-}) {
-    Text("Statistiken")
-}
-
-// StatsActivity.kt (Bridge)
-class StatsActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            RepsTheme {
-                StatsScreen(
-                    onNavigateBack = { finish() }
-                )
-            }
-        }
-    }
-}
-```
-
-### 1.4 Checkliste Phase 1
-
-- [x] StatsViewModel.kt erstellt
-- [x] StatsUiState.kt (Sealed Class) erstellt
-- [x] StatsScreen.kt erstellt
-- [x] StatCard.kt Komponente erstellt
-- [x] @Preview für alle Composables
-- [x] In RepsNavHost registriert
-- [x] Navigation von Main → Stats funktioniert (Bridge Activity)
-- [ ] Dunkelmodus getestet
-- [x] **Tests:** StatsViewModelTest.kt (8 Tests ✅)
-- [x] **Tests:** StatsUiStateTest.kt (5 Tests ✅)
-- [ ] **Review:** Code Review durchgeführt
-
-> ⚠️ **Issue gelöst:** Extended Material Icons durch Standard Icons ersetzt (siehe `migration_nach_compose_issues.md`)
+> ❌ **ENTFERNT (16.01.2026):** Das Stats-Feature wurde aus der App entfernt.
+> Alle zugehörigen Dateien wurden gelöscht:
+> - `ui/stats/StatsActivity.kt`
+> - `ui/stats/StatsScreen.kt`
+> - `ui/stats/StatsViewModel.kt`
+> - `ui/stats/StatsUiState.kt`
+> - `ui/components/StatCard.kt`
+> - Tests: `StatsViewModelTest.kt`, `StatsUiStateTest.kt`
 
 ---
 
@@ -998,6 +895,7 @@ fun WorkoutInputScreen(
 | 14.01.2026 | Zeitschätzung 6-8 Wochen | Realistisch mit Lernkurve |
 | 14.01.2026 | String Routes statt Type-Safe | Stabilität > Modernität, Type-Safe erst 14 Monate alt |
 | 16.01.2026 | Standard Icons statt Extended | APK-Größe: +5MB vermeiden, Details in `migration_nach_compose_issues.md` |
+| 16.01.2026 | Stats-Feature entfernt | Feature nicht benötigt, Phase 1 obsolet, 760 Zeilen Code entfernt |
 
 ---
 
@@ -1016,17 +914,14 @@ fun WorkoutInputScreen(
 
 1. ✅ Time-Based Feature mit XML fertigstellen
 2. ✅ **Phase 0:** Compose Setup + Navigation Shell (90%)
-3. 🔄 **Phase 1:** Stats Screen als Pilot-Projekt (70%)
-   - [ ] Dunkelmodus testen
-   - [ ] Unit Tests schreiben (StatsViewModelTest.kt)
-   - [ ] Code Review
-4. ⏳ **Phase 4 vorziehen:** Main Screen (103 Zeilen, einfacher Navigation-Hub)
+3. ❌ ~~**Phase 1:** Stats Screen~~ - Entfernt (16.01.2026)
+4. 🔄 **Phase 4:** Main Screen (103 Zeilen, einfacher Navigation-Hub)
 5. ⏳ **Phase 3:** History Screen (232 Zeilen, RecyclerView → LazyColumn)
 6. ⏳ **Phase 2:** Settings Screen (487 Zeilen, mit Sub-Phasen 2a/2b/2c)
 7. ⏳ **Phase 5:** WorkoutInput Screen
 8. ⏳ **Phase 6:** Timer Screen (komplexeste Migration)
 
-> 💡 **Anpassung 16.01.2026:** Phase 4 (Main) wird vorgezogen, da geringste Komplexität und zentraler Navigation-Hub.
+> 💡 **Anpassung 16.01.2026:** Phase 1 (Stats) entfernt. Phase 4 (Main) ist jetzt der erste Compose-Screen.
 
 ---
 
@@ -1035,10 +930,10 @@ fun WorkoutInputScreen(
 | Phase | Fortschritt | Notizen |
 |-------|-------------|--------|
 | 0 | ⬛⬛⬛⬛⬜ 90% | ComposeView Interop noch offen |
-| 1 | ⬛⬛⬛⬛⬜ 85% | 13 Tests ✅, Dunkelmodus + Review offen |
+| 1 | ❌ Entfernt | Stats-Feature nicht mehr benötigt |
 | 2 | ⬜⬜⬜⬜⬜ 0% | - |
 | 3 | ⬜⬜⬜⬜⬜ 0% | - |
-| 4 | ⬜⬜⬜⬜⬜ 0% | - |
+| 4 | ⬜⬜⬜⬜⬜ 0% | Nächster Schritt |
 | 5 | ⬜⬜⬜⬜⬜ 0% | - |
 | 6 | ⬜⬜⬜⬜⬜ 0% | - |
 | 7 | ⬜⬜⬜⬜⬜ 0% | - |
